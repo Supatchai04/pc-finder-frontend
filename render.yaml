@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: pc-finder-frontend
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_USE_MOCK_AUTH
+        value: "true"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
