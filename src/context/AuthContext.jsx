@@ -46,8 +46,10 @@ export function AuthProvider({ children }) {
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
     })
-    setUser(response.data.user)
-    return response.data.user
+    const userData = response.data.data.user;
+    
+    setUser(userData)
+    return userData
   }, [])
 
   const logout = useCallback(async () => {
