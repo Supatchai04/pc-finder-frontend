@@ -46,8 +46,8 @@ export function AuthProvider({ children }) {
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
     })
-    const userData = response.data.data.user;
-    
+    const userData = response.data?.user || response.user;
+  
     setUser(userData)
     return userData
   }, [])
