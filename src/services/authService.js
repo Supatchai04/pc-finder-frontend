@@ -1,34 +1,21 @@
-import axios from 'axios'
-import { apiClient } from '../api/apiClient.js'
-import { mockCurrentUser, mockGoogleLogin, mockLogout, mockRefreshToken } from '../mocks/auth.mock.js'
+import { apiClient } from '../api/client';
+import { endpoints } from '../api/endpoints';
+import { mockApi } from '../mocks/mockApi';
+import { isMockEnabled } from '../utils/api';
 
-const useMock = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const useMock = isMockEnabled();
 
-export async function loginWithGoogle(googleToken) {
-  if (useMock) return mockGoogleLogin()
-  const { data } = await apiClient.post('/api/auth/google', { googleToken })
-  return data
-}
-
-export async function getCurrentUser() {
-  if (useMock) return mockCurrentUser()
-  const { data } = await apiClient.get('/api/auth/me')
-  return data
-}
-
-export async function logoutRequest(refreshToken) {
-  if (useMock) return mockLogout()
-  const { data } = await apiClient.post('/api/auth/logout', { refreshToken })
-  return data
-}
-
-// Export ไว้สำหรับทดสอบเส้น refresh โดยตรงถ้าต้องการ
-export async function refreshAccessToken(refreshToken) {
-  if (useMock) {
-    const response = await mockRefreshToken()
-    return response.data.accessToken
-  }
-  const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken })
-  return data.data.accessToken
-}
+export const authService = {
+  googleLogin: async (googleToken) => {
+    if (useMock) return mockApi.auth.googleLogin();
+    return (await apiClient.post(endpoints.auth.google, { googleToken })).data;
+  },
+  me: async () => {
+    if (useMock) return mockApi.auth.me();
+    return (await apiClient.get(endpoints.auth.me)).data;
+  },
+  logout: async (refreshToken) => {
+    if (useMock) return mockApi.auth.logout();
+    return (await apiClient.post(endpoints.auth.logout, { refreshToken }, { timeout: 5000 })).data;
+  },
+};

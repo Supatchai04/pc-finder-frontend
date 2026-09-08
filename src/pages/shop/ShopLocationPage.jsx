@@ -1,0 +1,6 @@
+import { LocateFixed, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import PageHeader from '../../components/ui/PageHeader';
+import { store } from '../../data/mockData';
+
+export default function ShopLocationPage(){const [lat,setLat]=useState(store.latitude);const [lng,setLng]=useState(store.longitude);return <><PageHeader title="จัดการตำแหน่งร้านค้า" subtitle="ตั้งค่าตำแหน่งที่ตั้งร้านค้าของคุณ"/><div className="location-grid"><section className="section-card"><h3>ข้อมูลตำแหน่งร้านค้า</h3><label>ที่อยู่ร้าน<textarea rows="5" defaultValue={store.fullAddress}/></label><label>ละติจูด (Latitude)<input value={lat} onChange={e=>setLat(e.target.value)}/></label><label>ลองจิจูด (Longitude)<input value={lng} onChange={e=>setLng(e.target.value)}/></label><button className="outline-btn"><LocateFixed size={16}/> ปักหมุดตำแหน่ง</button><div className="form-actions"><button className="primary-btn">บันทึกข้อมูล</button><button className="outline-btn">ยกเลิก</button></div></section><section className="section-card"><h3>ตำแหน่งร้านค้าบนแผนที่</h3><div className="map-placeholder tall"><MapPin size={54}/><strong>Google Maps Placeholder</strong><span>{lat}, {lng}</span><small>พร้อมแทนที่ด้วย Google Maps API เมื่อใส่ API Key</small></div></section></div></>}

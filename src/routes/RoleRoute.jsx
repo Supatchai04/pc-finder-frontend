@@ -1,11 +1,11 @@
-import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import LoadingState from '../components/ui/LoadingState';
 
-export default function RoleRoute({ allow = [] }) {
-  const { user } = useAuth()
-  const role = user?.role?.toUpperCase()
-  if (!allow.map((item) => item.toUpperCase()).includes(role)) {
-    return <Navigate to="/app" replace />
-  }
-  return <Outlet />
+export default function RoleRoute({ allow, children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingState fullPage label="กำลังตรวจสอบสิทธิ์..." />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!allow.includes(user.role)) return <Navigate to="/" replace />;
+  return children;
 }

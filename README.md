@@ -1,71 +1,64 @@
-# PC FINDER — Frontend Foundation + Google Auth
+# PC FINDER Frontend
 
-รอบนี้ทำเฉพาะสิ่งที่ต้องพร้อมก่อนนำไปรวม Backend:
+React + Vite frontend for PC FINDER, connected to the current Backend API contract.
 
-- Vite + React
-- React Router
-- React-Bootstrap
-- Axios instance + interceptor
-- Google OAuth login
-- JWT Access Token / Refresh Token flow
-- `/api/auth/google`, `/api/auth/me`, `/api/auth/refresh`, `/api/auth/logout`
-- Protected Route และ Role Route foundation
-- Mock Auth ตาม API Contract
-- Login UX/UI แบบแบ่งสองฝั่ง
-- Reusable components เช่น Save / Cancel / AppButton / Alert / Loader
-
-
-
-## เริ่มใช้งาน
-
-เปิด Terminal ในโฟลเดอร์เดียวกับ `package.json`
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-เปิด URL ที่ Vite แสดง เช่น `http://localhost:5173`
-
-## โหมด Mock — ค่าเริ่มต้น
-
-`.env`
-
-```env
-VITE_USE_MOCK_AUTH=true
-VITE_MOCK_ROLE=USER
-```
-
-กด `เข้าสู่ระบบด้วย Google` ได้ทันที โดยยังไม่ต้องมี Backend
-
-ทดสอบ role mock ได้ด้วย `USER`, `SHOP`, `ADMIN` แล้ว restart dev server
-
-## เปลี่ยนไปใช้ Backend + Google จริง
-
-แก้ `.env`
-
-```env
-VITE_USE_MOCK_AUTH=false
-VITE_API_BASE_URL=https://your-backend.example.com
-VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-```
-
-จากนั้น restart:
-
-```bash
-npm run dev
-```
-
-> Google Client ID ต้องเป็น Web Client ID ของโปรเจกต์จริง และต้องตั้ง Authorized JavaScript origins ให้ตรงกับ URL Frontend
-
-## Build
+For a production-style compile check:
 
 ```bash
 npm run build
 ```
 
-ไฟล์ production จะอยู่ใน `dist/`
+## Environment
 
-## Integration กับ Backend
+Create `.env` from `.env.example`.
 
-อ่าน `docs/INTEGRATION_CHECKLIST.md`
+```env
+VITE_API_BASE_URL=https://hardware-store-search-backend.onrender.com
+VITE_USE_MOCK_AUTH=false
+VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com
+```
+
+Current Backend:
+`https://hardware-store-search-backend.onrender.com`
+
+## Main routes
+
+### Public / Customer
+- `/` — Home
+- `/login` — Google Login
+- `/hardware` — Hardware Finder
+- `/hardware/:category/:id` — Hardware Detail
+- `/compare` — Store Matching
+- `/stores/:shopId` — Store Profile
+- `/stores/:shopId/products` — Store Products
+- `/summary` — Build Summary / Print
+- `/favorites` — Favorite Stores / Products (USER)
+- `/specs` — Saved Specs (USER)
+- `/shop/register` — Shop Registration (USER)
+
+### Shop Owner
+- `/shop`
+- `/shop/products`
+- `/shop/profile`
+
+### Admin
+- `/admin`
+- `/admin/users`
+- `/admin/stores`
+- `/admin/stores/:shopId`
+
+## Vercel
+
+`vercel.json` contains the SPA rewrite needed for direct React Router URLs such as `/login`, `/hardware/VGA/1`, `/admin/users`, and `/shop/products`.
+
+## Project notes
+- API mapping: `docs/API_MAPPING.md`
+- Frontend progress: `docs/FRONTEND_PROGRESS_2026-09-06.md`
+- Manual QA checklist: `docs/QA_CHECKLIST.md`

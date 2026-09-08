@@ -1,8 +1,11 @@
-export default function Brand() {
+import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+export default function Brand({ compact = false }) {
   return (
-    <div className="brand-lockup" aria-label="PC FINDER">
-      <span className="brand-icon">⌕</span>
+    <Link to="/" className={`brand ${compact ? 'compact' : ''}`}>
+      <span className="brand-mark"><Search size={18} /></span>
       <span>PC FINDER</span>
-    </div>
-  )
+    </Link>
+  );
 }

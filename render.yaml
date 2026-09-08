@@ -5,8 +5,12 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
-      - key: VITE_USE_MOCK_AUTH
-        value: "true"
+      - key: VITE_USE_MOCK_API
+        value: "false"
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
     routes:
       - type: rewrite
         source: /*

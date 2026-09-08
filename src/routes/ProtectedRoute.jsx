@@ -1,12 +1,11 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import FullPageLoader from '../components/common/FullPageLoader.jsx'
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import LoadingState from '../components/ui/LoadingState';
 
-export default function ProtectedRoute() {
-  const { isAuthenticated, initializing } = useAuth()
-  const location = useLocation()
-
-  if (initializing) return <FullPageLoader label="กำลังตรวจสอบการเข้าสู่ระบบ..." />
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
-  return <Outlet />
+export default function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return <LoadingState fullPage label="กำลังตรวจสอบการเข้าสู่ระบบ..." />;
+  if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  return children;
 }
