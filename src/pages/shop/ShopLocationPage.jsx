@@ -1,6 +1,313 @@
-import { LocateFixed, MapPin } from 'lucide-react';
-import { useState } from 'react';
-import PageHeader from '../../components/ui/PageHeader';
-import { store } from '../../data/mockData';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-export default function ShopLocationPage(){const [lat,setLat]=useState(store.latitude);const [lng,setLng]=useState(store.longitude);return <><PageHeader title="จัดการตำแหน่งร้านค้า" subtitle="ตั้งค่าตำแหน่งที่ตั้งร้านค้าของคุณ"/><div className="location-grid"><section className="section-card"><h3>ข้อมูลตำแหน่งร้านค้า</h3><label>ที่อยู่ร้าน<textarea rows="5" defaultValue={store.fullAddress}/></label><label>ละติจูด (Latitude)<input value={lat} onChange={e=>setLat(e.target.value)}/></label><label>ลองจิจูด (Longitude)<input value={lng} onChange={e=>setLng(e.target.value)}/></label><button className="outline-btn"><LocateFixed size={16}/> ปักหมุดตำแหน่ง</button><div className="form-actions"><button className="primary-btn">บันทึกข้อมูล</button><button className="outline-btn">ยกเลิก</button></div></section><section className="section-card"><h3>ตำแหน่งร้านค้าบนแผนที่</h3><div className="map-placeholder tall"><MapPin size={54}/><strong>Google Maps Placeholder</strong><span>{lat}, {lng}</span><small>พร้อมแทนที่ด้วย Google Maps API เมื่อใส่ API Key</small></div></section></div></>}
+import {
+  MapPin,
+  Save,
+} from 'lucide-react';
+
+import PageHeader from '../../components/ui/PageHeader';
+import LoadingState from '../../components/ui/LoadingState';
+
+import GoogleMapPicker from '../../components/maps/GoogleMapPicker';
+
+import { shopService } from '../../services/shopService';
+import { storeService } from '../../services/storeService';
+
+import { getApiErrorMessage } from '../../utils/api';
+
+
+export default function ShopLocationPage() {
+  const [latitude, setLatitude] =
+    useState('');
+
+  const [longitude, setLongitude] =
+    useState('');
+
+  const [address, setAddress] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState('');
+
+  const [message, setMessage] =
+    useState('');
+
+
+  useEffect(() => {
+    let active = true;
+
+
+    const load = async () => {
+      try {
+        const dashboard =
+          await shopService.dashboard();
+
+        const info =
+          dashboard.data?.storeInfo ||
+          {};
+
+
+        let profile = {};
+
+
+        if (info.shopId) {
+          try {
+            const response =
+              await storeService.profile(
+                info.shopId
+              );
+
+            profile =
+              response.data || {};
+          } catch {
+            // ถ้า public profile โหลดไม่ได้
+            // ไม่ให้ทั้งหน้าพัง
+          }
+        }
+
+
+        if (!active) {
+          return;
+        }
+
+
+        const location =
+          profile.location || {};
+
+
+        setLatitude(
+          profile.latitude ??
+          location.latitude ??
+          ''
+        );
+
+
+        setLongitude(
+          profile.longitude ??
+          location.longitude ??
+          ''
+        );
+
+
+        const fullAddress =
+          profile.fullAddress ||
+          [
+            profile.addressText ||
+              location.addressText,
+
+            profile.subDistrict ||
+              location.subDistrict,
+
+            profile.district ||
+              location.district,
+
+            profile.province ||
+              location.province,
+
+            profile.zipCode ||
+              location.zipCode,
+          ]
+            .filter(Boolean)
+            .join(' ');
+
+
+        setAddress(
+          fullAddress ||
+          info.fullAddress ||
+          'ยังไม่มีข้อมูลที่อยู่ร้านค้า'
+        );
+      } catch (err) {
+        if (active) {
+          setError(
+            getApiErrorMessage(
+              err,
+              'โหลดตำแหน่งร้านค้าไม่สำเร็จ'
+            )
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+
+    load();
+
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+
+  const handleLocationChange = ({
+    latitude: nextLatitude,
+    longitude: nextLongitude,
+  }) => {
+    setLatitude(nextLatitude);
+    setLongitude(nextLongitude);
+
+    setMessage('');
+    setError('');
+  };
+
+
+  const save = async () => {
+    const lat =
+      Number(latitude);
+
+    const lng =
+      Number(longitude);
+
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+      setError(
+        'กรุณาค้นหาสถานที่หรือปักหมุดตำแหน่งร้านค้าก่อน'
+      );
+
+      return;
+    }
+
+
+    setSaving(true);
+    setError('');
+    setMessage('');
+
+
+    try {
+      const response =
+        await shopService.updateProfile({
+          latitude: lat,
+          longitude: lng,
+        });
+
+
+      setMessage(
+        response.message ||
+        'บันทึกตำแหน่งร้านค้าเรียบร้อยแล้ว'
+      );
+    } catch (err) {
+      setError(
+        getApiErrorMessage(
+          err,
+          'บันทึกตำแหน่งร้านค้าไม่สำเร็จ'
+        )
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  if (loading) {
+    return (
+      <LoadingState label="กำลังโหลดตำแหน่งร้านค้า..." />
+    );
+  }
+
+
+  return (
+    <div className="shop-location-page">
+
+      <PageHeader
+        title="จัดการตำแหน่งร้านค้า"
+        subtitle="ค้นหาและปักหมุดตำแหน่งร้านค้าของคุณบนแผนที่"
+      />
+
+
+      {error && (
+        <div className="inline-error">
+          {error}
+        </div>
+      )}
+
+
+      {message && (
+        <div className="inline-success">
+          {message}
+        </div>
+      )}
+
+
+      <section className="section-card shop-location-card">
+
+        <div className="shop-location-heading">
+
+          <span className="shop-location-heading-icon">
+            <MapPin size={21} />
+          </span>
+
+
+          <div>
+            <h2>
+              ตำแหน่งร้านค้าบนแผนที่
+            </h2>
+
+            <p>
+              ค้นหาสถานที่ หรือคลิกบนแผนที่เพื่อปักหมุดตำแหน่งร้านจริง
+            </p>
+          </div>
+
+        </div>
+
+
+        <div className="shop-location-address">
+
+          <MapPin size={18} />
+
+          <div>
+            <strong>
+              ที่อยู่ร้านค้า
+            </strong>
+
+            <span>
+              {address}
+            </span>
+          </div>
+
+        </div>
+
+
+        <GoogleMapPicker
+          latitude={latitude}
+          longitude={longitude}
+          onChange={handleLocationChange}
+        />
+
+
+        <div className="shop-location-actions">
+
+          <button
+            type="button"
+            className="primary-btn"
+            onClick={save}
+            disabled={saving}
+          >
+            <Save size={17} />
+
+            {saving
+              ? 'กำลังบันทึก...'
+              : 'บันทึกตำแหน่งร้านค้า'}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+  );
+}

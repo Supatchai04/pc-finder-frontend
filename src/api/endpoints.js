@@ -5,12 +5,31 @@ export const endpoints = {
     me: '/api/auth/me',
     refresh: '/api/auth/refresh',
   },
-  hardware: {
-    list: (category) => `/api/hardware/${category}`,
-    autocomplete: (category) => `/api/hardware/${category}/autocomplete`,
-    detail: (category, id) => `/api/hardware/${category}/${id}`,
-    matchStores: '/api/hardware/match-stores',
+
+   dropdowns: {
+    categories: '/api/dropdowns/categories',
+    shopStatuses: '/api/dropdowns/shop-statuses',
+    userRoles: '/api/dropdowns/user-roles',
+    userStatuses: '/api/dropdowns/user-statuses',
+    productStatuses: '/api/dropdowns/product-statuses',
   },
+  
+  hardware: {
+  list: (category) =>
+    `/api/hardware/${category}`,
+
+  autocomplete: (category) =>
+    `/api/hardware/${category}/autocomplete`,
+
+  detail: (category, id) =>
+    `/api/hardware/${category}/${id}`,
+
+  masterDetail: (masterId) =>
+    `/api/hardware/${masterId}/detail`,
+
+  matchStores:
+    '/api/hardware/match-stores',
+},
   builds: {
     summary: '/api/builds/summary',
   },

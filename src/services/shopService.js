@@ -12,6 +12,17 @@ export const shopService = {
     if (useMock) return mockApi.shop.register(payload);
     return (await apiClient.post(endpoints.stores.register, payload)).data;
   },
+  profileMe: async () => {
+  if (useMock) {
+    return mockApi.shop.profileMe();
+  }
+
+  return (
+    await apiClient.get(
+      '/api/stores/profile/me'
+    )
+  ).data;
+},
   updateProfile: async (payload) => useMock ? mockApi.shop.updateProfile(payload) : (await apiClient.put(endpoints.stores.ownProfile, payload)).data,
   createProduct: async (payload) => useMock ? mockApi.shop.createProduct(payload) : (await apiClient.post(endpoints.stores.ownProducts, payload)).data,
   updateProduct: async (shopProductId, payload) => useMock ? { status: 'success', data: { shopProductId, ...payload } } : (await apiClient.put(endpoints.stores.ownProduct(shopProductId), payload)).data,

@@ -86,10 +86,105 @@ export const adminStats = {
 };
 
 export const matchedStores = [
-  { shopId: 20, shopName: 'SpeedCom', rating: 4.8, reviews: 523, distanceKm: 7.2, totalPrice: 49580, products: [
-    ['ASUS RTX 5070 Ti 16GB GDDR7', 40800], ['CORSAIR DDR5 32GB (16GBx2) 6000', 4790], ['WD BLACK SN850X 1TB NVMe PCIe 4.0', 3990]
-  ] },
-  { shopId: 21, shopName: 'JIB Online', rating: 4.7, reviews: 2356, distanceKm: 9.4, totalPrice: 51080, products: [
-    ['ASUS RTX 5070 Ti 16GB GDDR7', 41900], ['CORSAIR DDR5 32GB (16GBx2) 6000', 4890], ['WD BLACK SN850X 1TB NVMe PCIe 4.0', 4290]
-  ] },
+  {
+    shopId: 20,
+    shopName: 'SpeedCom',
+    rating: 4.8,
+    reviews: 523,
+    distanceKm: 7.2,
+    province: 'กรุงเทพมหานคร',
+    district: 'บางเขน',
+    shopLatitude: 13.8478,
+    shopLongitude: 100.6043,
+
+    products: [
+      {
+        shopProductId: 2001,
+        masterId: 1,
+        category: 'CPU',
+        displayName: 'Intel Core i5-14700K',
+        price: 14900,
+        stock: 8,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2002,
+        masterId: 3,
+        category: 'VGA',
+        displayName: 'ROG Strix RTX 5070 Ti OC',
+        price: 40800,
+        stock: 4,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2003,
+        masterId: 8,
+        category: 'RAM',
+        displayName: 'Kingston Fury Beast DDR5 32GB 5600',
+        price: 3290,
+        stock: 10,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2004,
+        masterId: 10,
+        category: 'STORAGE',
+        displayName: 'WD BLACK SN850X 1TB NVMe PCIe 4.0',
+        price: 3990,
+        stock: 7,
+        status: 'ACTIVE',
+      },
+    ],
+  },
+
+  {
+    shopId: 21,
+    shopName: 'JIB Online',
+    rating: 4.7,
+    reviews: 2356,
+    distanceKm: 9.4,
+    province: 'กรุงเทพมหานคร',
+    district: 'ลาดพร้าว',
+    shopLatitude: 13.8112,
+    shopLongitude: 100.5618,
+
+    products: [
+      {
+        shopProductId: 2101,
+        masterId: 1,
+        category: 'CPU',
+        displayName: 'Intel Core i5-14700K',
+        price: 15200,
+        stock: 6,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2102,
+        masterId: 4,
+        category: 'VGA',
+        displayName: 'TUF Gaming RTX 5070 Ti OC',
+        price: 40800,
+        stock: 5,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2103,
+        masterId: 8,
+        category: 'RAM',
+        displayName: 'Kingston Fury Beast DDR5 32GB 5600',
+        price: 3490,
+        stock: 12,
+        status: 'ACTIVE',
+      },
+      {
+        shopProductId: 2104,
+        masterId: 13,
+        category: 'PSU',
+        displayName: 'Corsair RM750e 750W 80+ Gold',
+        price: 3590,
+        stock: 9,
+        status: 'ACTIVE',
+      },
+    ],
+  },
 ];

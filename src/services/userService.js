@@ -6,18 +6,186 @@ import { isMockEnabled } from '../utils/api';
 const useMock = isMockEnabled();
 
 export const userService = {
-  favoriteProducts: async (params = {}) => useMock ? mockApi.users.favorites() : (await apiClient.get(endpoints.users.favoriteProducts, { params })).data,
-  addFavoriteProduct: async (shopProductId) => useMock ? { status: 'success' } : (await apiClient.post(endpoints.users.favoriteProducts, { shopProductId })).data,
-  removeFavoriteProduct: async (shopProductId) => useMock ? { status: 'success' } : (await apiClient.delete(endpoints.users.favoriteProduct(shopProductId))).data,
+  /* =========================================================
+     FAVORITE PRODUCTS
+     ========================================================= */
 
-  favoriteStores: async (params = {}) => useMock ? mockApi.users.favorites() : (await apiClient.get(endpoints.users.favoriteStores, { params })).data,
-  addFavoriteStore: async (shopId) => useMock ? { status: 'success', data: { shopId } } : (await apiClient.post(endpoints.users.favoriteStores, { shopId })).data,
-  removeFavoriteStore: async (shopId) => useMock ? { status: 'success' } : (await apiClient.delete(endpoints.users.favoriteStore(shopId))).data,
+  favoriteProducts: async (params = {}) => {
+    if (useMock) {
+      return mockApi.users.favoriteProducts(params);
+    }
 
-  specs: async (params = {}) => useMock ? mockApi.users.specs() : (await apiClient.get(endpoints.users.specs, { params })).data,
-  spec: async (specId) => useMock ? { status: 'success', data: null } : (await apiClient.get(endpoints.users.spec(specId))).data,
-  createSpec: async (payload) => useMock ? { status: 'success', data: { specId: Date.now(), ...payload } } : (await apiClient.post(endpoints.users.specs, payload)).data,
-  addSpecItem: async (specId, shopProductId) => useMock ? { status: 'success' } : (await apiClient.post(endpoints.users.specItems(specId), { shopProductId })).data,
-  removeSpecItem: async (specId, shopProductId) => useMock ? { status: 'success' } : (await apiClient.delete(endpoints.users.specItem(specId, shopProductId))).data,
-  deleteSpec: async (specId) => useMock ? { status: 'success' } : (await apiClient.delete(endpoints.users.spec(specId))).data,
+    return (
+      await apiClient.get(
+        endpoints.users.favoriteProducts,
+        { params }
+      )
+    ).data;
+  },
+
+  addFavoriteProduct: async (shopProductId) => {
+    if (useMock) {
+      return mockApi.users.addFavoriteProduct(shopProductId);
+    }
+
+    return (
+      await apiClient.post(
+        endpoints.users.favoriteProducts,
+        { shopProductId }
+      )
+    ).data;
+  },
+
+  removeFavoriteProduct: async (shopProductId) => {
+    if (useMock) {
+      return mockApi.users.removeFavoriteProduct(shopProductId);
+    }
+
+    return (
+      await apiClient.delete(
+        endpoints.users.favoriteProduct(shopProductId)
+      )
+    ).data;
+  },
+
+
+  /* =========================================================
+     FAVORITE STORES
+     ========================================================= */
+
+  favoriteStores: async (params = {}) => {
+    if (useMock) {
+      return mockApi.users.favoriteStores(params);
+    }
+
+    return (
+      await apiClient.get(
+        endpoints.users.favoriteStores,
+        { params }
+      )
+    ).data;
+  },
+
+  addFavoriteStore: async (shopId) => {
+    if (useMock) {
+      return mockApi.users.addFavoriteStore(shopId);
+    }
+
+    return (
+      await apiClient.post(
+        endpoints.users.favoriteStores,
+        { shopId }
+      )
+    ).data;
+  },
+
+  removeFavoriteStore: async (shopId) => {
+    if (useMock) {
+      return mockApi.users.removeFavoriteStore(shopId);
+    }
+
+    return (
+      await apiClient.delete(
+        endpoints.users.favoriteStore(shopId)
+      )
+    ).data;
+  },
+
+
+  /* =========================================================
+     SPECS
+     ========================================================= */
+
+  specs: async (params = {}) => {
+    if (useMock) {
+      return mockApi.users.specs();
+    }
+
+    return (
+      await apiClient.get(
+        endpoints.users.specs,
+        { params }
+      )
+    ).data;
+  },
+
+  spec: async (specId) => {
+    if (useMock) {
+      return {
+        status: 'success',
+        data: null,
+      };
+    }
+
+    return (
+      await apiClient.get(
+        endpoints.users.spec(specId)
+      )
+    ).data;
+  },
+
+  createSpec: async (payload) => {
+    if (useMock) {
+      return {
+        status: 'success',
+        data: {
+          specId: Date.now(),
+          ...payload,
+        },
+      };
+    }
+
+    return (
+      await apiClient.post(
+        endpoints.users.specs,
+        payload
+      )
+    ).data;
+  },
+
+  addSpecItem: async (specId, shopProductId) => {
+    if (useMock) {
+      return {
+        status: 'success',
+      };
+    }
+
+    return (
+      await apiClient.post(
+        endpoints.users.specItems(specId),
+        { shopProductId }
+      )
+    ).data;
+  },
+
+  removeSpecItem: async (specId, shopProductId) => {
+    if (useMock) {
+      return {
+        status: 'success',
+      };
+    }
+
+    return (
+      await apiClient.delete(
+        endpoints.users.specItem(
+          specId,
+          shopProductId
+        )
+      )
+    ).data;
+  },
+
+  deleteSpec: async (specId) => {
+    if (useMock) {
+      return {
+        status: 'success',
+      };
+    }
+
+    return (
+      await apiClient.delete(
+        endpoints.users.spec(specId)
+      )
+    ).data;
+  },
 };
