@@ -16,19 +16,130 @@ const AuthContext =
   createContext(null);
 
 
-const SUSPENDED_MESSAGE =
+export const SUSPENDED_LOGIN_MESSAGE =
   'ไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อผู้ดูแลระบบ';
 
 
-const isSuspendedUser = (user) => {
-  return (
-    String(
-      user?.userStatus || ''
-    ).toUpperCase() ===
-    'SUSPENDED'
+/* =========================================================
+   STATUS HELPERS
+   ========================================================= */
+
+const normalizeStatus = (value) =>
+  String(value || '')
+    .trim()
+    .toUpperCase();
+
+
+/*
+ * รองรับหลายตำแหน่ง เผื่อ Backend ส่งกลับมาเป็น
+ *
+ * user.userStatus
+ * userStatus
+ *
+ * user.shopStatus
+ * user.storeStatus
+ * shop.shopStatus
+ * store.shopStatus
+ * shopStatus
+ * storeStatus
+ */
+const isSuspendedAuthPayload = (
+  payload
+) => {
+  if (!payload) {
+    return false;
+  }
+
+
+  const data =
+    payload?.data &&
+    typeof payload.data === 'object'
+      ? payload.data
+      : payload;
+
+
+  const user =
+    data?.user ||
+    payload?.user ||
+    {};
+
+
+  const shop =
+    data?.shop ||
+    data?.store ||
+    user?.shop ||
+    user?.store ||
+    {};
+
+
+  /* USER STATUS */
+
+  const userStatus =
+    user?.userStatus ??
+    user?.user_status ??
+    data?.userStatus ??
+    data?.user_status ??
+    '';
+
+
+  if (
+    normalizeStatus(
+      userStatus
+    ) === 'SUSPENDED'
+  ) {
+    return true;
+  }
+
+
+  /* SHOP STATUS */
+
+  const shopStatuses = [
+    user?.shopStatus,
+    user?.shop_status,
+
+    user?.storeStatus,
+    user?.store_status,
+
+    shop?.shopStatus,
+    shop?.shop_status,
+
+    shop?.storeStatus,
+    shop?.store_status,
+
+    data?.shopStatus,
+    data?.shop_status,
+
+    data?.storeStatus,
+    data?.store_status,
+  ];
+
+
+  return shopStatuses.some(
+    (status) =>
+      normalizeStatus(
+        status
+      ) === 'SUSPENDED'
   );
 };
 
+
+const createSuspendedError =
+  () => {
+    const error =
+      new Error(
+        SUSPENDED_LOGIN_MESSAGE
+      );
+
+    error.code =
+      'ACCOUNT_SUSPENDED';
+
+    return error;
+  };
+
+
+/* =========================================================
+   PROVIDER
+   ========================================================= */
 
 export function AuthProvider({
   children,
@@ -38,10 +149,12 @@ export function AuthProvider({
     setUser,
   ] = useState(null);
 
+
   const [
     loading,
     setLoading,
   ] = useState(true);
+
 
   const [
     error,
@@ -49,97 +162,107 @@ export function AuthProvider({
   ] = useState('');
 
 
-  /*
-   * ============================================
-   * RESTORE SESSION
-   * ============================================
-   */
+  /* =========================================================
+     RESTORE SESSION
+     ========================================================= */
 
   const hydrate =
-    useCallback(async () => {
-      setLoading(true);
-
-      const token =
-        tokenStorage.getAccessToken();
+    useCallback(
+      async () => {
+        setLoading(true);
 
 
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-
-        return;
-      }
+        const token =
+          tokenStorage
+            .getAccessToken();
 
 
-      try {
-        const response =
-          await authService.me();
-
-
-        const next =
-          response?.data?.user;
-
-
-        /*
-         * ถ้าบัญชีถูก Suspend
-         * ห้าม Restore Session เดิมกลับมา
-         */
-        if (
-          next &&
-          isSuspendedUser(next)
-        ) {
-          tokenStorage.clear();
-
+        if (!token) {
           setUser(null);
-
-          setError(
-            SUSPENDED_MESSAGE
-          );
+          setLoading(false);
 
           return;
         }
 
 
-        setUser(
-          next
-            ? {
-                ...next,
-                role:
-                  normalizeRole(
-                    next.role
-                  ),
-              }
-            : null
-        );
-      } catch {
-        tokenStorage.clear();
-
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+        try {
+          const response =
+            await authService.me();
 
 
-  /*
-   * ============================================
-   * INITIAL AUTH
-   * ============================================
-   */
+          const payload =
+            response?.data || {};
+
+
+          /*
+           * ถ้าบัญชีหรือร้านถูก Suspend
+           * ห้ามให้ session เดิมกลับเข้าระบบด้วย
+           */
+          if (
+            isSuspendedAuthPayload(
+              payload
+            )
+          ) {
+            tokenStorage.clear();
+
+            setUser(null);
+
+            setError(
+              SUSPENDED_LOGIN_MESSAGE
+            );
+
+            return;
+          }
+
+
+          const next =
+            payload?.user;
+
+
+          setUser(
+            next
+              ? {
+                  ...next,
+
+                  role:
+                    normalizeRole(
+                      next.role
+                    ),
+                }
+              : null
+          );
+
+        } catch {
+          tokenStorage.clear();
+
+          setUser(null);
+
+        } finally {
+          setLoading(false);
+        }
+      },
+      []
+    );
+
+
+  /* =========================================================
+     INITIAL AUTH
+     ========================================================= */
 
   useEffect(() => {
     hydrate();
 
 
-    const onExpired = () => {
-      tokenStorage.clear();
+    const onExpired =
+      () => {
+        tokenStorage.clear();
 
-      setUser(null);
+        setUser(null);
 
-      setError(
-        'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'
-      );
-    };
+        setError(
+          'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'
+        );
+      };
 
 
     window.addEventListener(
@@ -153,28 +276,84 @@ export function AuthProvider({
         'pcfinder:auth-expired',
         onExpired
       );
-  }, [hydrate]);
+
+  }, [
+    hydrate,
+  ]);
 
 
-  /*
-   * ============================================
-   * GOOGLE LOGIN
-   * ============================================
-   */
+  /* =========================================================
+     GOOGLE LOGIN
+     ========================================================= */
 
   const loginWithGoogle =
-    async (googleToken) => {
+    async (
+      googleToken
+    ) => {
+
       setError('');
 
 
-      const response =
-        await authService.googleLogin(
-          googleToken
-        );
+      let response;
+
+
+      try {
+        response =
+          await authService
+            .googleLogin(
+              googleToken
+            );
+
+      } catch (err) {
+
+        /*
+         * รองรับกรณี Backend ตอบ 4xx
+         * แต่ยังส่ง status ของ account กลับมา
+         */
+        if (
+          isSuspendedAuthPayload(
+            err?.response?.data
+          )
+        ) {
+          tokenStorage.clear();
+
+          setUser(null);
+
+          setError(
+            SUSPENDED_LOGIN_MESSAGE
+          );
+
+          throw createSuspendedError();
+        }
+
+
+        throw err;
+      }
 
 
       const payload =
         response?.data;
+
+
+      /*
+       * สำคัญ:
+       * ตรวจ SUSPENDED ก่อนเก็บ Token ทุกครั้ง
+       */
+      if (
+        isSuspendedAuthPayload(
+          payload
+        )
+      ) {
+        tokenStorage.clear();
+
+        setUser(null);
+
+        setError(
+          SUSPENDED_LOGIN_MESSAGE
+        );
+
+        throw createSuspendedError();
+      }
 
 
       if (
@@ -188,66 +367,9 @@ export function AuthProvider({
 
 
       /*
-       * ==========================================
-       * BLOCK SUSPENDED USER
-       * ==========================================
-       *
-       * ต้องตรวจตรงนี้ก่อน setTokens()
-       * และก่อน setUser()
+       * ผ่านการตรวจแล้วเท่านั้น
+       * จึงอนุญาตให้สร้าง session
        */
-
-      if (
-        isSuspendedUser(
-          payload.user
-        )
-      ) {
-        /*
-         * กัน Token เก่าค้างอยู่
-         */
-        tokenStorage.clear();
-
-
-        /*
-         * ห้ามให้ AuthContext ถือว่า Login แล้ว
-         */
-        setUser(null);
-
-
-        setError(
-          SUSPENDED_MESSAGE
-        );
-
-
-        /*
-         * Popup ตาม Requirement
-         */
-        window.alert(
-          SUSPENDED_MESSAGE
-        );
-
-
-        /*
-         * Throw เพื่อหยุด Flow ใน LoginPage
-         * ไม่ให้คำสั่ง navigate() หลัง await ทำงาน
-         */
-        const suspendedError =
-          new Error(
-            SUSPENDED_MESSAGE
-          );
-
-        suspendedError.code =
-          'ACCOUNT_SUSPENDED';
-
-        throw suspendedError;
-      }
-
-
-      /*
-       * ==========================================
-       * ACTIVE USER
-       * ==========================================
-       */
-
       tokenStorage.setTokens(
         payload
       );
@@ -267,30 +389,33 @@ export function AuthProvider({
         normalizedUser
       );
 
+      setError('');
+
 
       return normalizedUser;
     };
 
 
-  /*
-   * ============================================
-   * LOGOUT
-   * ============================================
-   */
+  /* =========================================================
+     LOGOUT
+     ========================================================= */
 
   const logout =
     async () => {
+
       const refreshToken =
-        tokenStorage.getRefreshToken();
+        tokenStorage
+          .getRefreshToken();
 
 
       try {
         await authService.logout(
           refreshToken
         );
+
       } catch {
         /*
-         * Local logout ต้องสำเร็จเสมอ
+         * Local logout ต้องสำเร็จ
          * แม้ Backend ใช้งานไม่ได้
          */
       } finally {
@@ -303,11 +428,9 @@ export function AuthProvider({
     };
 
 
-  /*
-   * ============================================
-   * CONTEXT VALUE
-   * ============================================
-   */
+  /* =========================================================
+     CONTEXT
+     ========================================================= */
 
   const value =
     useMemo(
@@ -342,5 +465,8 @@ export function AuthProvider({
 }
 
 
-export const useAuth = () =>
-  useContext(AuthContext);
+export const useAuth =
+  () =>
+    useContext(
+      AuthContext
+    );

@@ -1,11 +1,17 @@
 import {
+  Clock3,
+  ExternalLink,
   Heart,
+  MapPin,
+  Phone,
   Search,
+  ShoppingBag,
 } from 'lucide-react';
 
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -13,6 +19,13 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+
+import {
+  Modal,
+} from 'react-bootstrap';
+
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 import { useAuth } from '../../auth/AuthContext';
 
@@ -36,6 +49,239 @@ const categories = [
   'PSU',
 ];
 
+
+/* =========================================================
+   MAP HELPERS
+   ========================================================= */
+
+const getNumberOrNull = (value) => {
+  if (
+    value === '' ||
+    value === null ||
+    value === undefined
+  ) {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : null;
+};
+
+
+const STORE_MARKER_ICON =
+  L.divIcon({
+    className: '',
+
+    iconSize: [
+      36,
+      46,
+    ],
+
+    iconAnchor: [
+      18,
+      44,
+    ],
+
+    html: `
+      <div
+        style="
+          width: 34px;
+          height: 34px;
+          position: relative;
+
+          border-radius:
+            50% 50% 50% 0;
+
+          background:
+            #ef3f37;
+
+          border:
+            3px solid #ffffff;
+
+          box-shadow:
+            0 3px 10px
+            rgba(30, 45, 65, 0.35);
+
+          transform:
+            rotate(-45deg);
+        "
+      >
+        <div
+          style="
+            position: absolute;
+
+            width: 10px;
+            height: 10px;
+
+            top: 9px;
+            left: 9px;
+
+            border-radius: 50%;
+
+            background:
+              #ffffff;
+          "
+        ></div>
+      </div>
+    `,
+  });
+
+
+function StorePreviewMap({
+  latitude,
+  longitude,
+  shopName,
+}) {
+  const mapElementRef =
+    useRef(null);
+
+  const mapRef =
+    useRef(null);
+
+
+  const lat =
+    getNumberOrNull(
+      latitude
+    );
+
+  const lng =
+    getNumberOrNull(
+      longitude
+    );
+
+
+  useEffect(() => {
+    if (
+      lat === null ||
+      lng === null ||
+      !mapElementRef.current
+    ) {
+      return undefined;
+    }
+
+
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+
+    const map =
+      L.map(
+        mapElementRef.current,
+        {
+          zoomControl: true,
+          scrollWheelZoom: true,
+        }
+      );
+
+
+    map.setView(
+      [
+        lat,
+        lng,
+      ],
+      16
+    );
+
+
+    L.tileLayer(
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+
+        attribution:
+          '&copy; OpenStreetMap contributors',
+      }
+    ).addTo(map);
+
+
+    const marker =
+      L.marker(
+        [
+          lat,
+          lng,
+        ],
+        {
+          icon:
+            STORE_MARKER_ICON,
+        }
+      ).addTo(map);
+
+
+    if (shopName) {
+      marker.bindPopup(
+        shopName
+      );
+    }
+
+
+    mapRef.current =
+      map;
+
+
+    const timer =
+      window.setTimeout(
+        () => {
+          map.invalidateSize();
+        },
+        250
+      );
+
+
+    return () => {
+      window.clearTimeout(
+        timer
+      );
+
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+
+  }, [
+    lat,
+    lng,
+    shopName,
+  ]);
+
+
+  if (
+    lat === null ||
+    lng === null
+  ) {
+    return (
+      <div className="store-modal-map-empty">
+
+        <MapPin
+          size={32}
+        />
+
+        <strong>
+          ยังไม่มีข้อมูลพิกัดร้านค้า
+        </strong>
+
+      </div>
+    );
+  }
+
+
+  return (
+    <div
+      ref={mapElementRef}
+      className="store-modal-map"
+    />
+  );
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
 
 export default function StoreProductsPage() {
   const { shopId } =
@@ -109,148 +355,179 @@ export default function StoreProductsPage() {
   ] = useState(null);
 
 
-  /*
-   * ============================================
-   * LOAD STORE + PRODUCTS
-   * ============================================
-   */
-  const load = async (
-    page = 1
-  ) => {
-    setLoading(true);
-    setError('');
+  /* =========================================================
+     STORE MODAL
+     ========================================================= */
+
+  const [
+    storeModalOpen,
+    setStoreModalOpen,
+  ] = useState(false);
 
 
-    try {
-      const [
-        profileRes,
-        productsRes,
-      ] = await Promise.all([
-        store
-          ? Promise.resolve({
-              data: store,
-            })
-          : storeService.profile(
-              shopId
-            ),
+  const openStoreModal =
+    () => {
+      setStoreModalOpen(true);
+    };
 
-        storeService.products(
-          shopId,
-          {
+
+  const closeStoreModal =
+    () => {
+      setStoreModalOpen(false);
+    };
+
+
+  /* =========================================================
+     LOAD STORE + PRODUCTS
+     ========================================================= */
+
+  const load =
+    async (
+      page = 1
+    ) => {
+
+      setLoading(true);
+      setError('');
+
+
+      try {
+        const [
+          profileRes,
+          productsRes,
+        ] = await Promise.all([
+
+          store
+            ? Promise.resolve({
+                data: store,
+              })
+            : storeService.profile(
+                shopId
+              ),
+
+          storeService.products(
+            shopId,
+            {
+              page,
+              limit: 20,
+
+              ...(category
+                ? {
+                    category,
+                  }
+                : {}),
+            }
+          ),
+        ]);
+
+
+        /*
+         * รองรับทั้ง:
+         *
+         * data: {...}
+         * และ
+         * data: { shop: {...} }
+         */
+        const rawProfile =
+          profileRes?.data || {};
+
+
+        const profile =
+          rawProfile?.shop ||
+          rawProfile;
+
+
+        setStore(
+          profile || store
+        );
+
+
+        const productList =
+          Array.isArray(
+            productsRes.data
+          )
+            ? productsRes.data
+            : [];
+
+
+        setProducts(
+          productList
+        );
+
+
+        setMeta(
+          productsRes.meta || {
             page,
+            totalPages: 1,
+            totalItems:
+              productList.length,
             limit: 20,
-
-            ...(category
-              ? {
-                  category,
-                }
-              : {}),
           }
-        ),
-      ]);
+        );
 
 
-      setStore(
-        profileRes.data ||
-        store
-      );
+        /*
+         * Favorite Product
+         */
+        if (
+          user?.role ===
+          'USER'
+        ) {
+          try {
+            const favoriteRes =
+              await userService
+                .favoriteProducts({
+                  page: 1,
+                  limit: 100,
+                });
 
 
-      const productList =
-        Array.isArray(
-          productsRes.data
-        )
-          ? productsRes.data
-          : [];
-
-
-      setProducts(
-        productList
-      );
-
-
-      setMeta(
-        productsRes.meta || {
-          page,
-          totalPages: 1,
-          totalItems:
-            productList.length,
-          limit: 20,
-        }
-      );
-
-
-      /*
-       * ถ้า Login เป็น USER
-       * โหลดรายการ Favorite Product
-       * เพื่อให้หัวใจแสดงสถานะถูกต้อง
-       */
-      if (
-        user?.role ===
-        'USER'
-      ) {
-        try {
-          const favoriteRes =
-            await userService.favoriteProducts(
-              {
-                page: 1,
-                limit: 100,
-              }
+            setFavoriteIds(
+              new Set(
+                (
+                  favoriteRes.data ||
+                  []
+                ).map(
+                  (item) =>
+                    Number(
+                      item.shopProductId
+                    )
+                )
+              )
             );
 
+          } catch {
+            /*
+             * Favorite โหลดไม่ได้
+             * ไม่ให้กระทบรายการสินค้า
+             */
+          }
 
-          const favoriteList =
-            Array.isArray(
-              favoriteRes.data
-            )
-              ? favoriteRes.data
-              : [];
-
-
+        } else {
           setFavoriteIds(
-            new Set(
-              favoriteList.map(
-                (item) =>
-                  Number(
-                    item.shopProductId
-                  )
-              )
-            )
+            new Set()
           );
-        } catch {
-          /*
-           * Favorite เป็นข้อมูลเสริม
-           * ถ้าโหลดไม่ได้
-           * ไม่ให้กระทบหน้ารายการสินค้า
-           */
         }
-      } else {
-        setFavoriteIds(
-          new Set()
+
+      } catch (err) {
+
+        setError(
+          getApiErrorMessage(
+            err,
+            'โหลดรายการสินค้าไม่สำเร็จ'
+          )
         );
+
+        setProducts([]);
+
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(
-        getApiErrorMessage(
-          err,
-          'โหลดรายการสินค้าไม่สำเร็จ'
-        )
-      );
+    };
 
 
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  /*
-   * โหลดใหม่เมื่อเปลี่ยนร้าน
-   * หรือเปลี่ยน Category
-   */
   useEffect(() => {
     load(1);
+
   }, [
     shopId,
     category,
@@ -258,13 +535,13 @@ export default function StoreProductsPage() {
   ]);
 
 
-  /*
-   * ============================================
-   * SEARCH เฉพาะรายการในหน้าปัจจุบัน
-   * ============================================
-   */
+  /* =========================================================
+     SEARCH
+     ========================================================= */
+
   const visibleProducts =
     useMemo(() => {
+
       const keyword =
         search
           .trim()
@@ -286,31 +563,29 @@ export default function StoreProductsPage() {
             item.description,
           ]
             .filter(Boolean)
-            .some((value) =>
-              String(value)
-                .toLowerCase()
-                .includes(
-                  keyword
-                )
+            .some(
+              (value) =>
+                String(value)
+                  .toLowerCase()
+                  .includes(
+                    keyword
+                  )
             )
       );
+
     }, [
       products,
       search,
     ]);
 
 
-  /*
-   * ============================================
-   * FAVORITE PRODUCT
-   * ============================================
-   */
+  /* =========================================================
+     FAVORITE PRODUCT
+     ========================================================= */
+
   const toggleFavoriteProduct =
     async (id) => {
 
-      /*
-       * ยังไม่ Login
-       */
       if (!user) {
         navigate(
           '/login',
@@ -326,10 +601,6 @@ export default function StoreProductsPage() {
       }
 
 
-      /*
-       * SHOP / ADMIN
-       * ไม่ให้ใช้ Favorite Product
-       */
       if (
         user.role !==
         'USER'
@@ -351,10 +622,6 @@ export default function StoreProductsPage() {
           Number(id);
 
 
-        /*
-         * มีอยู่แล้ว
-         * → ยกเลิก Favorite
-         */
         if (
           favoriteIds.has(
             productId
@@ -364,13 +631,8 @@ export default function StoreProductsPage() {
             .removeFavoriteProduct(
               id
             );
-        }
 
-        /*
-         * ยังไม่มี
-         * → เพิ่ม Favorite
-         */
-        else {
+        } else {
           await userService
             .addFavoriteProduct(
               id
@@ -378,11 +640,9 @@ export default function StoreProductsPage() {
         }
 
 
-        /*
-         * Update UI ทันที
-         */
         setFavoriteIds(
           (previous) => {
+
             const next =
               new Set(
                 previous
@@ -397,6 +657,7 @@ export default function StoreProductsPage() {
               next.delete(
                 productId
               );
+
             } else {
               next.add(
                 productId
@@ -407,17 +668,15 @@ export default function StoreProductsPage() {
             return next;
           }
         );
+
       } catch (err) {
-        /*
-         * Backend ตอบ 409
-         * แปลว่าสินค้าถูก Favorite อยู่แล้ว
-         */
+
         if (
           !favoriteIds.has(
             Number(id)
           ) &&
-          err?.response
-            ?.status === 409
+          err?.response?.status ===
+            409
         ) {
           setFavoriteIds(
             (previous) =>
@@ -426,6 +685,7 @@ export default function StoreProductsPage() {
                 Number(id),
               ])
           );
+
         } else {
           setError(
             getApiErrorMessage(
@@ -434,16 +694,69 @@ export default function StoreProductsPage() {
             )
           );
         }
+
       } finally {
         setBusyId(null);
       }
     };
 
 
-  /*
-   * ตัวอักษรสำหรับ Logo
-   * กรณีร้านไม่มีรูป
-   */
+  /* =========================================================
+     STORE DATA FOR MODAL
+     ========================================================= */
+
+  const contact =
+    store?.contactChannels ||
+    store?.contact ||
+    {};
+
+
+  const location =
+    store?.location ||
+    {};
+
+
+  const modalLatitude =
+    getNumberOrNull(
+      store?.latitude ??
+      location?.latitude
+    );
+
+
+  const modalLongitude =
+    getNumberOrNull(
+      store?.longitude ??
+      location?.longitude
+    );
+
+
+  const hasModalLocation =
+    modalLatitude !== null &&
+    modalLongitude !== null;
+
+
+  const fullAddress =
+    store?.fullAddress ||
+    [
+      store?.addressText ??
+        location?.addressText,
+
+      store?.subDistrict ??
+        location?.subDistrict,
+
+      store?.district ??
+        location?.district,
+
+      store?.province ??
+        location?.province,
+
+      store?.zipCode ??
+        location?.zipCode,
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+
   const initials =
     (
       store?.shopName ||
@@ -453,20 +766,25 @@ export default function StoreProductsPage() {
       .toUpperCase();
 
 
+  /* =========================================================
+     UI
+     ========================================================= */
+
   return (
     <CustomerPageFrame>
 
       <div className="content-page public-content-page">
 
-        {/* ============================================
+        {/* =========================================
             STORE HEADER
-            ============================================ */}
+            ========================================= */}
 
         <div className="store-hero">
 
           <div className="store-avatar large">
 
             {store?.profileImageUrl ? (
+
               <img
                 src={
                   store.profileImageUrl
@@ -476,6 +794,7 @@ export default function StoreProductsPage() {
                   'ร้านค้า'
                 }
               />
+
             ) : (
               initials
             )}
@@ -500,13 +819,13 @@ export default function StoreProductsPage() {
           </div>
 
 
+          {/* เปลี่ยนจาก navigate เป็น Modal */}
+
           <button
             type="button"
             className="outline-btn"
-            onClick={() =>
-              navigate(
-                `/stores/${shopId}`
-              )
+            onClick={
+              openStoreModal
             }
           >
             ดูข้อมูลร้านค้า
@@ -515,10 +834,6 @@ export default function StoreProductsPage() {
         </div>
 
 
-        {/* ============================================
-            ERROR
-            ============================================ */}
-
         {error && (
           <div className="inline-error">
             {error}
@@ -526,9 +841,9 @@ export default function StoreProductsPage() {
         )}
 
 
-        {/* ============================================
-            SEARCH + FILTER
-            ============================================ */}
+        {/* =========================================
+            FILTER
+            ========================================= */}
 
         <div className="store-filters">
 
@@ -537,7 +852,6 @@ export default function StoreProductsPage() {
             <Search
               size={17}
             />
-
 
             <input
               value={search}
@@ -591,9 +905,9 @@ export default function StoreProductsPage() {
         </div>
 
 
-        {/* ============================================
-            PRODUCTS TABLE
-            ============================================ */}
+        {/* =========================================
+            PRODUCT TABLE
+            ========================================= */}
 
         <div className="data-card">
 
@@ -612,35 +926,13 @@ export default function StoreProductsPage() {
                 <thead>
 
                   <tr>
-
-                    <th>
-                      #
-                    </th>
-
-                    <th>
-                      ชื่อสินค้า
-                    </th>
-
-                    <th>
-                      หมวดหมู่
-                    </th>
-
-                    <th>
-                      ราคา
-                    </th>
-
-                    <th>
-                      ประกัน
-                    </th>
-
-                    <th>
-                      สถานะ
-                    </th>
-
-                    <th>
-                      บันทึก
-                    </th>
-
+                    <th>#</th>
+                    <th>ชื่อสินค้า</th>
+                    <th>หมวดหมู่</th>
+                    <th>ราคา</th>
+                    <th>ประกัน</th>
+                    <th>สถานะ</th>
+                    <th>บันทึก</th>
                   </tr>
 
                 </thead>
@@ -673,19 +965,13 @@ export default function StoreProductsPage() {
                           }
                         >
 
-                          {/* NUMBER */}
-
                           <td>
-                            {(meta.page -
-                              1) *
-                              (meta.limit ||
-                                20) +
+                            {(meta.page - 1) *
+                              (meta.limit || 20) +
                               index +
                               1}
                           </td>
 
-
-                          {/* PRODUCT */}
 
                           <td>
 
@@ -705,37 +991,26 @@ export default function StoreProductsPage() {
                           </td>
 
 
-                          {/* CATEGORY */}
-
                           <td>
                             {item.category ||
                               '-'}
                           </td>
 
 
-                          {/* PRICE */}
-
                           <td>
-
-                            {item.price !=
-                            null
+                            {item.price != null
                               ? `${Number(
                                   item.price
                                 ).toLocaleString()}.-`
                               : '-'}
-
                           </td>
 
-
-                          {/* WARRANTY */}
 
                           <td>
                             {item.warranty ||
                               '-'}
                           </td>
 
-
-                          {/* STATUS */}
 
                           <td>
 
@@ -748,8 +1023,6 @@ export default function StoreProductsPage() {
 
                           </td>
 
-
-                          {/* FAVORITE ONLY */}
 
                           <td>
 
@@ -774,11 +1047,6 @@ export default function StoreProductsPage() {
                                   )
                                 }
                                 title={
-                                  isFavorite
-                                    ? 'ยกเลิกบันทึกสินค้า'
-                                    : 'บันทึกสินค้า'
-                                }
-                                aria-label={
                                   isFavorite
                                     ? 'ยกเลิกบันทึกสินค้า'
                                     : 'บันทึกสินค้า'
@@ -810,16 +1078,12 @@ export default function StoreProductsPage() {
               </table>
 
 
-              {/* EMPTY */}
-
               {!visibleProducts.length && (
                 <div className="empty-inline">
                   ไม่พบสินค้าในเงื่อนไขนี้
                 </div>
               )}
 
-
-              {/* PAGINATION */}
 
               <div className="table-footer">
 
@@ -833,8 +1097,7 @@ export default function StoreProductsPage() {
 
                 <PaginationBar
                   page={
-                    meta.page ||
-                    1
+                    meta.page || 1
                   }
                   pages={
                     meta.totalPages ||
@@ -854,6 +1117,289 @@ export default function StoreProductsPage() {
         </div>
 
       </div>
+
+
+      {/* =====================================================
+          STORE DETAIL MODAL
+          ===================================================== */}
+
+      <Modal
+        show={storeModalOpen}
+        onHide={closeStoreModal}
+        centered
+        size="xl"
+        scrollable
+        dialogClassName="public-store-detail-dialog"
+      >
+
+        <Modal.Header closeButton>
+
+          <div className="public-store-modal-title">
+
+            <Modal.Title>
+              ข้อมูลร้านค้า
+            </Modal.Title>
+
+            <span>
+              รายละเอียดและตำแหน่งของร้านค้า
+            </span>
+
+          </div>
+
+        </Modal.Header>
+
+
+        <Modal.Body>
+
+          {store && (
+            <>
+
+              {/* STORE HEADER */}
+
+              <section className="public-store-modal-header">
+
+                <div className="public-store-modal-logo">
+
+                  {store.profileImageUrl ? (
+
+                    <img
+                      src={
+                        store.profileImageUrl
+                      }
+                      alt={
+                        store.shopName ||
+                        ''
+                      }
+                    />
+
+                  ) : (
+
+                    <ShoppingBag
+                      size={30}
+                    />
+
+                  )}
+
+                </div>
+
+
+                <div>
+
+                  <h2>
+                    {store.shopName ||
+                      '-'}
+                  </h2>
+
+                  <p>
+                    {store.description ||
+                      store.shopDescription ||
+                      'ไม่มีคำอธิบายร้านค้า'}
+                  </p>
+
+                </div>
+
+              </section>
+
+
+              {/* DETAILS + MAP */}
+
+              <div className="public-store-modal-grid">
+
+                {/* LEFT */}
+
+                <section className="public-store-modal-card">
+
+                  <h3>
+                    รายละเอียดร้านค้า
+                  </h3>
+
+
+                  <div className="public-store-info-row">
+
+                    <Clock3
+                      size={19}
+                    />
+
+                    <div>
+
+                      <strong>
+                        เวลาทำการ
+                      </strong>
+
+                      <span>
+                        {store.operatingHours ||
+                          '-'}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="public-store-info-row">
+
+                    <Phone
+                      size={19}
+                    />
+
+                    <div>
+
+                      <strong>
+                        เบอร์โทรศัพท์
+                      </strong>
+
+                      <span>
+                        {contact?.phone ||
+                          store.ownerPhone ||
+                          '-'}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="public-store-contact">
+
+                    <div>
+
+                      <span>
+                        Line
+                      </span>
+
+                      <strong>
+                        {contact?.line ||
+                          contact?.lineId ||
+                          '-'}
+                      </strong>
+
+                    </div>
+
+
+                    <div>
+
+                      <span>
+                        Facebook
+                      </span>
+
+                      <strong>
+                        {contact?.facebook ||
+                          '-'}
+                      </strong>
+
+                    </div>
+
+
+                    <div>
+
+                      <span>
+                        เว็บไซต์
+                      </span>
+
+                      <strong>
+                        {contact?.website ||
+                          '-'}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </section>
+
+
+                {/* RIGHT */}
+
+                <section className="public-store-modal-card">
+
+                  <h3>
+                    ตำแหน่งร้านค้า
+                  </h3>
+
+
+                  <StorePreviewMap
+                    latitude={
+                      modalLatitude
+                    }
+                    longitude={
+                      modalLongitude
+                    }
+                    shopName={
+                      store.shopName
+                    }
+                  />
+
+
+                  {hasModalLocation && (
+
+                    <a
+                      className="outline-btn compact public-store-map-link"
+                      href={
+                        `https://www.openstreetmap.org/?mlat=${modalLatitude}&mlon=${modalLongitude}#map=17/${modalLatitude}/${modalLongitude}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+
+                      <ExternalLink
+                        size={15}
+                      />
+
+                      เปิด OpenStreetMap
+
+                    </a>
+
+                  )}
+
+                </section>
+
+              </div>
+
+
+              {/* ADDRESS */}
+
+              <section className="public-store-modal-address">
+
+                <MapPin
+                  size={20}
+                />
+
+                <div>
+
+                  <strong>
+                    ที่อยู่ร้านค้า
+                  </strong>
+
+                  <span>
+                    {fullAddress ||
+                      '-'}
+                  </span>
+
+                </div>
+
+              </section>
+
+            </>
+          )}
+
+        </Modal.Body>
+
+
+        <Modal.Footer>
+
+          <button
+            type="button"
+            className="outline-btn"
+            onClick={
+              closeStoreModal
+            }
+          >
+            ปิด
+          </button>
+
+        </Modal.Footer>
+
+      </Modal>
 
     </CustomerPageFrame>
   );

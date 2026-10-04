@@ -98,6 +98,24 @@ export default function App() {
         />
 
 
+        {/* =========================================
+            STORE PROFILE
+            GET /api/stores/:shopId/profile
+            ========================================= */}
+
+        <Route
+          path="stores/:shopId"
+          element={
+            <StoreProfilePage />
+          }
+        />
+
+
+        {/* =========================================
+            STORE PRODUCTS
+            GET /api/stores/:shopId/products
+            ========================================= */}
+
         <Route
           path="stores/:shopId/products"
           element={

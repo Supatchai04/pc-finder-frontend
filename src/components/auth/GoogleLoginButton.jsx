@@ -10,15 +10,22 @@ import {
   Spinner,
 } from 'react-bootstrap';
 
-import { useAuth } from '../../auth/AuthContext';
-import { isMockEnabled } from '../../utils/api';
+import {
+  useAuth,
+} from '../../auth/AuthContext';
+
+import {
+  isMockEnabled,
+} from '../../utils/api';
 
 
 const useMock =
   isMockEnabled();
 
+
 const clientId =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  import.meta.env
+    .VITE_GOOGLE_CLIENT_ID;
 
 
 export default function GoogleLoginButton({
@@ -45,11 +52,9 @@ export default function GoogleLoginButton({
   ] = useState('');
 
 
-  /*
-   * ============================================
-   * LOGIN
-   * ============================================
-   */
+  /* =========================================================
+     LOGIN
+     ========================================================= */
 
   const finishLogin =
     async (
@@ -58,6 +63,7 @@ export default function GoogleLoginButton({
     ) => {
 
       setBusy(true);
+
       setMessage('');
 
 
@@ -68,18 +74,6 @@ export default function GoogleLoginButton({
           );
 
 
-        /*
-         * จะมาถึงตรงนี้เฉพาะ Login สำเร็จ
-         *
-         * ถ้า SUSPENDED
-         * AuthContext จะ throw ACCOUNT_SUSPENDED
-         * ทำให้ไม่เรียก onSuccess()
-         */
-        if (!user) {
-          return;
-        }
-
-
         onSuccess?.(
           user
         );
@@ -87,16 +81,9 @@ export default function GoogleLoginButton({
       } catch (error) {
 
         /*
-         * ========================================
-         * SUSPENDED ACCOUNT
-         * ========================================
-         *
-         * AuthContext แสดง popup ไปแล้ว:
-         *
-         * "ไม่สามารถเข้าสู่ระบบได้
-         *  กรุณาติดต่อผู้ดูแลระบบ"
-         *
-         * ดังนั้นตรงนี้ไม่ต้องแสดงข้อความซ้ำ
+         * ACCOUNT_SUSPENDED
+         * ให้ LoginPage แสดง Modal
+         * จึงไม่แสดง Alert ซ้ำตรงปุ่ม Google
          */
         if (
           error?.code ===
@@ -106,12 +93,8 @@ export default function GoogleLoginButton({
         }
 
 
-        /*
-         * Error Login ทั่วไป
-         */
         setMessage(
-          error?.response
-            ?.data
+          error?.response?.data
             ?.message ||
           error?.message ||
           'เข้าสู่ระบบไม่สำเร็จ'
@@ -123,14 +106,11 @@ export default function GoogleLoginButton({
     };
 
 
-  /*
-   * ============================================
-   * GOOGLE IDENTITY SERVICES
-   * ============================================
-   */
+  /* =========================================================
+     GOOGLE IDENTITY
+     ========================================================= */
 
   useEffect(() => {
-
     if (
       useMock ||
       !clientId
@@ -156,20 +136,18 @@ export default function GoogleLoginButton({
         }
 
 
-        window.google
-          .accounts
-          .id
+        window.google.accounts.id
           .initialize({
             client_id:
               clientId,
 
-            callback: ({
-              credential,
-            }) => {
-              finishLogin(
-                credential
-              );
-            },
+            callback:
+              ({
+                credential,
+              }) =>
+                finishLogin(
+                  credential
+                ),
           });
 
 
@@ -177,9 +155,7 @@ export default function GoogleLoginButton({
           .innerHTML = '';
 
 
-        window.google
-          .accounts
-          .id
+        window.google.accounts.id
           .renderButton(
             hostRef.current,
             {
@@ -202,19 +178,13 @@ export default function GoogleLoginButton({
       };
 
 
-    /*
-     * Script Google
-     * ถูกโหลดไว้แล้ว
-     */
     if (existing) {
       initialize();
+
       return;
     }
 
 
-    /*
-     * โหลด Google Identity Script
-     */
     const script =
       document.createElement(
         'script'
@@ -224,13 +194,14 @@ export default function GoogleLoginButton({
     script.src =
       'https://accounts.google.com/gsi/client';
 
-    script.async = true;
-    script.defer = true;
+    script.async =
+      true;
 
-    script.dataset
-      .googleIdentity =
+    script.defer =
+      true;
+
+    script.dataset.googleIdentity =
       'true';
-
 
     script.onload =
       initialize;
@@ -244,11 +215,9 @@ export default function GoogleLoginButton({
   }, []);
 
 
-  /*
-   * ============================================
-   * MOCK MODE
-   * ============================================
-   */
+  /* =========================================================
+     MOCK
+     ========================================================= */
 
   if (useMock) {
     return (
@@ -260,17 +229,23 @@ export default function GoogleLoginButton({
           onClick={() =>
             finishLogin()
           }
-          disabled={busy}
+          disabled={
+            busy
+          }
         >
 
           {busy ? (
+
             <Spinner
               size="sm"
             />
+
           ) : (
+
             <span className="google-g">
               G
             </span>
+
           )}
 
 
@@ -292,12 +267,14 @@ export default function GoogleLoginButton({
 
 
         {message && (
+
           <Alert
             variant="danger"
             className="mt-3 mb-0"
           >
             {message}
           </Alert>
+
         )}
 
       </>
@@ -305,32 +282,22 @@ export default function GoogleLoginButton({
   }
 
 
-  /*
-   * ============================================
-   * GOOGLE CLIENT ID MISSING
-   * ============================================
-   */
+  /* =========================================================
+     NO CLIENT ID
+     ========================================================= */
 
   if (!clientId) {
     return (
       <Alert variant="warning">
-
-        กรุณาใส่
-        {' '}
-        VITE_GOOGLE_CLIENT_ID
-        {' '}
-        ในไฟล์ .env
-
+        กรุณาใส่ VITE_GOOGLE_CLIENT_ID ในไฟล์ .env
       </Alert>
     );
   }
 
 
-  /*
-   * ============================================
-   * REAL GOOGLE LOGIN
-   * ============================================
-   */
+  /* =========================================================
+     REAL GOOGLE
+     ========================================================= */
 
   return (
     <>
@@ -342,19 +309,23 @@ export default function GoogleLoginButton({
 
 
       {busy && (
+
         <div className="text-secondary small mt-2">
           กำลังเข้าสู่ระบบ...
         </div>
+
       )}
 
 
       {message && (
+
         <Alert
           variant="danger"
           className="mt-3 mb-0"
         >
           {message}
         </Alert>
+
       )}
 
     </>

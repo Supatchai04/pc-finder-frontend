@@ -5518,3 +5518,1448 @@ textarea.form-control {
     flex-direction: column;
   }
 }
+
+/* =========================================================
+   SHOP REGISTER — FONT READABILITY FIX
+   เพิ่มความอ่านง่ายเฉพาะหน้าสมัครเปิดร้าน
+   ========================================================= */
+
+/* ฟอนต์หลักภายในฟอร์ม */
+.register-form {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* หัวข้อแต่ละ Section */
+.register-form h3 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  color: #24384d;
+
+  margin-bottom: 16px;
+}
+
+
+/* Label ของทุกช่อง */
+.register-form label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+
+  color: #40566d;
+
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+
+/* ตัวหนังสือใน Input / Select / Textarea */
+.register-form input,
+.register-form select,
+.register-form textarea {
+  font-family: "Noto Sans Thai", sans-serif;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: #263b50;
+
+  min-height: 42px;
+
+  padding: 10px 12px;
+
+  border-radius: 7px;
+}
+
+
+/* Select ให้สูงและอ่านง่ายขึ้น */
+.register-form select {
+  min-height: 42px;
+
+  cursor: pointer;
+}
+
+
+/* Textarea */
+.register-form textarea {
+  min-height: 92px;
+
+  resize: vertical;
+}
+
+
+/* Placeholder */
+.register-form input::placeholder,
+.register-form textarea::placeholder {
+  color: #94a2b1;
+
+  font-size: 13px;
+  opacity: 1;
+}
+
+
+/* ข้อความอธิบายเล็ก ๆ ใต้ Label */
+.register-form label small {
+  margin-top: 4px;
+
+  color: #74869a;
+
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+
+/* Required * */
+.register-form label > span b {
+  font-size: 13px;
+
+  color: #ef4d56;
+}
+
+
+/* Error */
+.register-form .field-error-message,
+.field-error-message {
+  font-size: 12px !important;
+  font-weight: 500;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   LOCATION SECTION
+   ========================================================= */
+
+.shop-register-location-heading h3 {
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #263b50;
+}
+
+
+.shop-register-location-heading p {
+  margin: 4px 0 0;
+
+  color: #6f8296;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+
+.shop-register-location-status {
+  font-size: 12.5px;
+  line-height: 1.5;
+
+  padding: 12px 14px;
+}
+
+
+/* หัวข้อความค้นหาสถานที่ */
+.register-form .location-search-label,
+.register-form .map-search-label {
+  font-size: 13px;
+  font-weight: 600;
+
+  color: #30475f;
+}
+
+
+/* ปุ่มในฟอร์ม */
+.register-form button {
+  font-family: "Noto Sans Thai", sans-serif;
+
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .register-form {
+    font-size: 14px;
+  }
+
+  .register-form h3 {
+    font-size: 15px;
+  }
+
+  .register-form label {
+    font-size: 13px;
+  }
+
+  .register-form input,
+  .register-form select,
+  .register-form textarea {
+    font-size: 14px;
+  }
+}
+
+
+/* =========================================================
+   FAVORITES PAGE — BIGGER / EASIER TO READ
+   โดยเฉพาะแท็บ "สินค้าที่ชื่นชอบ"
+   ========================================================= */
+
+.favorites-page,
+.content-page.favorites-page {
+  font-size: 16px;
+}
+
+/* หัวข้อหน้า */
+.favorites-page h1,
+.content-page.favorites-page h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.favorites-page .page-subtitle,
+.content-page.favorites-page .page-subtitle,
+.favorites-page .section-subtitle,
+.content-page.favorites-page .section-subtitle,
+.favorites-page .muted-text,
+.content-page.favorites-page .muted-text {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* ปุ่มสลับ tab ด้านบน */
+.favorites-page .favorites-tabs button,
+.favorites-page .favorites-toggle button,
+.favorites-page .segment-tabs button,
+.favorites-page .tab-switch button,
+.content-page.favorites-page .favorites-tabs button,
+.content-page.favorites-page .favorites-toggle button,
+.content-page.favorites-page .segment-tabs button,
+.content-page.favorites-page .tab-switch button {
+  font-size: 1rem;
+  font-weight: 700;
+  min-height: 46px;
+  padding: 0 18px;
+}
+
+/* search + select */
+.favorites-page .search-control,
+.content-page.favorites-page .search-control {
+  min-height: 48px;
+}
+
+.favorites-page .search-control input,
+.favorites-page select,
+.content-page.favorites-page .search-control input,
+.content-page.favorites-page select {
+  font-size: 1rem;
+  height: 48px;
+}
+
+.favorites-page .search-control svg,
+.content-page.favorites-page .search-control svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* card/table container */
+.favorites-page .data-card,
+.content-page.favorites-page .data-card {
+  border-radius: 16px;
+}
+
+/* บรรทัดหัวตาราง */
+.favorites-page table thead th,
+.content-page.favorites-page table thead th {
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* เนื้อในตาราง */
+.favorites-page table tbody td,
+.content-page.favorites-page table tbody td {
+  font-size: 1rem;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  vertical-align: middle;
+}
+
+/* ชื่อสินค้า / ชื่อร้าน */
+.favorites-page .favorite-product-name,
+.favorites-page .product-name,
+.favorites-page .table-title,
+.favorites-page .item-title,
+.favorites-page .shop-name,
+.content-page.favorites-page .favorite-product-name,
+.content-page.favorites-page .product-name,
+.content-page.favorites-page .table-title,
+.content-page.favorites-page .item-title,
+.content-page.favorites-page .shop-name {
+  font-size: 1.14rem;
+  line-height: 1.5;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* รายละเอียดบรรทัดรอง เช่น category / address ใต้ชื่อ */
+.favorites-page .favorite-product-meta,
+.favorites-page .favorite-shop-meta,
+.favorites-page .shop-address,
+.favorites-page .table-subtext,
+.favorites-page .item-subtitle,
+.favorites-page .item-meta,
+.favorites-page small,
+.content-page.favorites-page .favorite-product-meta,
+.content-page.favorites-page .favorite-shop-meta,
+.content-page.favorites-page .shop-address,
+.content-page.favorites-page .table-subtext,
+.content-page.favorites-page .item-subtitle,
+.content-page.favorites-page .item-meta,
+.content-page.favorites-page small {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #64748b;
+}
+
+/* คอลัมน์ราคา */
+.favorites-page .price-cell,
+.favorites-page .product-price,
+.favorites-page td.price,
+.content-page.favorites-page .price-cell,
+.content-page.favorites-page .product-price,
+.content-page.favorites-page td.price {
+  font-size: 1.14rem;
+  font-weight: 800;
+}
+
+/* วันที่บันทึก */
+.favorites-page .saved-date,
+.favorites-page .date-cell,
+.content-page.favorites-page .saved-date,
+.content-page.favorites-page .date-cell {
+  font-size: 1rem;
+}
+
+/* ปุ่ม action เช่น ดูร้านค้า / ลบ */
+.favorites-page .row-actions button,
+.favorites-page .action-buttons button,
+.favorites-page .table-actions button,
+.content-page.favorites-page .row-actions button,
+.content-page.favorites-page .action-buttons button,
+.content-page.favorites-page .table-actions button {
+  font-size: 0.96rem;
+  min-height: 40px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+/* badge / label */
+.favorites-page .section-badge,
+.favorites-page .inline-badge,
+.content-page.favorites-page .section-badge,
+.content-page.favorites-page .inline-badge {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* footer table */
+.favorites-page .table-footer,
+.content-page.favorites-page .table-footer {
+  font-size: 0.98rem;
+}
+
+/* pagination */
+.favorites-page .pagination-bar button,
+.favorites-page .pagination-bar .page-btn,
+.content-page.favorites-page .pagination-bar button,
+.content-page.favorites-page .pagination-bar .page-btn {
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 0.95rem;
+}
+
+/* เพิ่มระยะหายใจให้ดูโปร่งขึ้น */
+.favorites-page .data-card table tbody tr,
+.content-page.favorites-page .data-card table tbody tr {
+  height: 74px;
+}
+
+/* responsive */
+@media (max-width: 1200px) {
+  .favorites-page .favorite-product-name,
+  .favorites-page .product-name,
+  .favorites-page .table-title,
+  .favorites-page .item-title,
+  .favorites-page .shop-name,
+  .content-page.favorites-page .favorite-product-name,
+  .content-page.favorites-page .product-name,
+  .content-page.favorites-page .table-title,
+  .content-page.favorites-page .item-title,
+  .content-page.favorites-page .shop-name {
+    font-size: 1.05rem;
+  }
+
+  .favorites-page .favorite-product-meta,
+  .favorites-page .favorite-shop-meta,
+  .favorites-page .shop-address,
+  .favorites-page .table-subtext,
+  .favorites-page .item-subtitle,
+  .favorites-page .item-meta,
+  .favorites-page small,
+  .content-page.favorites-page .favorite-product-meta,
+  .content-page.favorites-page .favorite-shop-meta,
+  .content-page.favorites-page .shop-address,
+  .content-page.favorites-page .table-subtext,
+  .content-page.favorites-page .item-subtitle,
+  .content-page.favorites-page .item-meta,
+  .content-page.favorites-page small {
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================================================
+   FAVORITES PAGE — READABILITY / LARGE DESKTOP
+   ขยายตัวหนังสือและพื้นที่เฉพาะหน้ารายการที่บันทึกไว้
+   ========================================================= */
+
+.favorites-unified-page {
+  width: 100%;
+  max-width: 1450px;
+  margin: 0 auto;
+  min-width: 0;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.favorites-unified-page h1 {
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 800;
+  color: #172b40;
+}
+
+.favorites-unified-page .page-header p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #718397;
+}
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.favorites-unified-tabs {
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+
+.favorites-unified-tabs button {
+  min-height: 44px;
+
+  padding: 0 18px;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 14px;
+  font-weight: 650;
+
+  border-radius: 9px;
+}
+
+.favorites-unified-tabs button svg {
+  width: 19px;
+  height: 19px;
+}
+
+.favorites-unified-tabs button.active {
+  font-weight: 750;
+}
+
+
+/* =========================================================
+   SEARCH + FILTER
+   ========================================================= */
+
+.favorites-unified-toolbar {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.favorites-search-box {
+  height: 48px;
+
+  padding: 0 15px;
+
+  border-radius: 9px;
+}
+
+.favorites-search-box svg {
+  width: 19px;
+  height: 19px;
+}
+
+.favorites-search-box input {
+  font-family: "Noto Sans Thai", sans-serif;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: #263b50;
+}
+
+.favorites-search-box input::placeholder {
+  font-size: 14px;
+  color: #8d9cac;
+}
+
+.favorites-category-filter {
+  width: 190px;
+  min-height: 48px;
+
+  padding: 0 13px;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 14px;
+
+  color: #33495f;
+
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   TABLE CARD
+   ========================================================= */
+
+.favorites-table-card {
+  border-radius: 14px;
+}
+
+.favorites-table-tab {
+  min-height: 52px;
+
+  padding-left: 20px;
+  padding-right: 20px;
+
+  font-size: 14px;
+}
+
+.favorites-table-tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.favorites-table-tab span {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.favorites-table-tab strong {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.favorites-unified-table {
+  min-width: 900px;
+}
+
+.favorites-unified-table thead th {
+  height: 52px;
+
+  padding: 0 20px;
+
+  color: #536a81;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.favorites-unified-table tbody td {
+  min-height: 78px;
+
+  padding: 18px 20px;
+
+  color: #354b61;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+
+  vertical-align: middle;
+}
+
+
+/* เพิ่มพื้นที่แต่ละแถว */
+.favorites-unified-table tbody tr {
+  height: 78px;
+}
+
+
+/* =========================================================
+   PRODUCT / STORE CELL
+   ========================================================= */
+
+.favorites-store-cell {
+  min-width: 230px;
+
+  gap: 13px;
+}
+
+.favorites-product-cell {
+  min-width: 300px;
+
+  gap: 12px;
+}
+
+
+/* รูปร้าน / Icon */
+.favorites-row-icon {
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  border-radius: 10px;
+}
+
+.favorites-row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* =========================================================
+   ชื่อสินค้า + ชื่อร้าน
+   ========================================================= */
+
+.favorites-store-cell strong,
+.favorites-product-cell strong {
+  display: block;
+
+  color: #142d46;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 15.5px;
+  font-weight: 750;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   ข้อมูลใต้ชื่อ
+   CATEGORY / ที่อยู่ร้าน
+   จุดที่เดิมอ่านยาก
+   ========================================================= */
+
+.favorites-store-cell small,
+.favorites-product-cell small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #667d94;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+
+  line-height: 1.6;
+}
+
+
+/* โดยเฉพาะที่อยู่ใต้ชื่อร้าน */
+.favorites-store-cell small {
+  color: #617990;
+}
+
+
+/* =========================================================
+   STORE LOCATION TAB
+   ========================================================= */
+
+.favorites-location-cell {
+  min-width: 190px;
+
+  gap: 8px;
+
+  color: #536d87;
+
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.favorites-location-cell svg {
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   PRICE
+   ========================================================= */
+
+.favorites-price {
+  color: #0878f9;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  line-height: 1.4;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.favorites-table-actions {
+  gap: 9px;
+}
+
+.favorites-view-btn {
+  min-height: 40px;
+
+  padding: 0 15px;
+
+  border-radius: 8px;
+
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.favorites-delete-btn {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 8px;
+}
+
+.favorites-delete-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+
+/* =========================================================
+   FOOTER + PAGINATION
+   ========================================================= */
+
+.favorites-table-footer {
+  min-height: 58px;
+
+  padding-left: 20px;
+  padding-right: 20px;
+
+  font-size: 13.5px;
+}
+
+.favorites-table-footer > span {
+  font-size: 13.5px;
+  color: #667b90;
+}
+
+.favorites-table-footer .pagination-bar button {
+  min-width: 38px;
+  min-height: 38px;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.favorites-empty-state {
+  min-height: 150px;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .favorites-unified-page {
+    max-width: none;
+  }
+
+  .favorites-unified-table {
+    min-width: 860px;
+  }
+
+  .favorites-store-cell strong,
+  .favorites-product-cell strong {
+    font-size: 14.5px;
+  }
+
+  .favorites-store-cell small,
+  .favorites-product-cell small {
+    font-size: 12.5px;
+  }
+}
+
+
+@media (max-width: 620px) {
+  .favorites-unified-tabs button {
+    min-height: 42px;
+
+    padding: 0 10px;
+
+    font-size: 12.5px;
+  }
+
+  .favorites-search-box input,
+  .favorites-category-filter {
+    font-size: 13px;
+  }
+
+  .favorites-unified-table tbody td {
+    font-size: 13px;
+  }
+
+  .favorites-store-cell strong,
+  .favorites-product-cell strong {
+    font-size: 14px;
+  }
+
+  .favorites-store-cell small,
+  .favorites-product-cell small {
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   SHOP PRODUCT — MASTER AUTOCOMPLETE
+   วางท้าย src/styles.css
+   ========================================================= */
+
+.product-master-autocomplete-wrap {
+  position: relative;
+}
+
+.product-master-autocomplete-menu {
+  position: absolute;
+  z-index: 1085;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(520px, calc(100vw - 64px));
+  max-height: 320px;
+  overflow: hidden;
+  border: 1px solid #d9e3ee;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px rgba(25, 48, 75, 0.16);
+}
+
+.product-master-autocomplete-head {
+  min-height: 42px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e7edf4;
+  background: #f8fbff;
+}
+
+.product-master-autocomplete-head strong {
+  color: #314a63;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.product-master-autocomplete-head span {
+  color: #2f9d61;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.product-master-autocomplete-list {
+  max-height: 274px;
+  padding: 6px;
+  overflow-y: auto;
+}
+
+.product-master-autocomplete-item {
+  width: 100%;
+  padding: 10px 11px;
+  display: block;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #19334d;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-master-autocomplete-item + .product-master-autocomplete-item {
+  margin-top: 3px;
+}
+
+.product-master-autocomplete-item:hover,
+.product-master-autocomplete-item:focus {
+  background: #eef6ff;
+  outline: none;
+}
+
+.product-master-autocomplete-item strong {
+  display: block;
+  color: #173a60;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.product-master-autocomplete-item small {
+  display: block;
+  margin-top: 3px;
+  color: #73879b;
+  font-size: 10.5px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.product-master-autocomplete-empty {
+  padding: 18px 12px;
+  color: #7a8da1;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .product-master-autocomplete-menu {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   LOGIN — SUSPENDED ACCOUNT MODAL
+   ========================================================= */
+
+.suspended-login-backdrop.show {
+  background: #5f6670;
+  opacity: 0.56;
+}
+
+
+/* ตัว Modal */
+.suspended-login-modal {
+  max-width: 520px;
+  padding: 0 18px;
+}
+
+
+/* เอา Bootstrap card เดิมออก */
+.suspended-login-modal .modal-content {
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: transparent;
+
+  box-shadow:
+    0 18px 55px
+    rgba(15, 23, 42, 0.25);
+}
+
+
+/* กล่องทั้งหมด */
+.suspended-login-alert {
+  width: 100%;
+
+  overflow: hidden;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   RED TOP
+   ========================================================= */
+
+.suspended-login-alert-top {
+  position: relative;
+
+  min-height: 165px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eb5b68;
+}
+
+
+/* ปุ่ม X ขวาบน */
+.suspended-login-close {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  cursor: pointer;
+}
+
+
+.suspended-login-close:hover {
+  color: #ffffff;
+
+  background:
+    rgba(255, 255, 255, 0.1);
+}
+
+
+/* วงกลม X ใหญ่ */
+.suspended-login-x-icon {
+  width: 94px;
+  height: 94px;
+
+  display: grid;
+  place-items: center;
+
+  border:
+    5px solid #ffffff;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.suspended-login-alert-body {
+  padding:
+    30px 30px 34px;
+
+  text-align: center;
+
+  background: #ffffff;
+}
+
+
+.suspended-login-alert-body h2 {
+  margin:
+    0 0 10px;
+
+  color: #2d435c;
+
+  font-size: 28px;
+  font-weight: 700;
+
+  line-height: 1.35;
+}
+
+
+.suspended-login-alert-body p {
+  margin:
+    0 0 26px;
+
+  color: #5e7084;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   OK BUTTON
+   ========================================================= */
+
+.suspended-login-ok {
+  min-width: 150px;
+  min-height: 44px;
+
+  padding:
+    0 25px;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: #f5b900;
+
+  color: #ffffff;
+
+  font-family:
+    "Noto Sans Thai",
+    sans-serif;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.suspended-login-ok:hover {
+  background: #dda700;
+
+  transform:
+    translateY(-1px);
+}
+
+
+.suspended-login-ok:active {
+  transform:
+    translateY(0);
+}
+
+
+/* Mobile */
+@media (max-width: 576px) {
+  .suspended-login-modal {
+    padding: 0 14px;
+  }
+
+  .suspended-login-alert-top {
+    min-height: 145px;
+  }
+
+  .suspended-login-x-icon {
+    width: 82px;
+    height: 82px;
+  }
+
+  .suspended-login-alert-body {
+    padding:
+      25px 20px 28px;
+  }
+
+  .suspended-login-alert-body h2 {
+    font-size: 23px;
+  }
+
+  .suspended-login-alert-body p {
+    font-size: 14px;
+  }
+}
+
+/* =========================================================
+   GLOBAL PAGE BACKGROUND
+   ใช้กับหน้าที่เป็น layout หลัก / หน้าแสดงตาราง
+   พื้นหลังนอก component = #EFF2F4
+   ========================================================= */
+
+html,
+body,
+#root {
+  background: #EFF2F4;
+}
+
+/* ---------- Public / Customer zone ---------- */
+.customer-layout,
+.customer-main,
+.customer-page-main,
+.content-page,
+.public-content-page {
+  background: #EFF2F4;
+}
+
+/* ---------- Dashboard zone (SHOP / ADMIN) ---------- */
+.dashboard-shell,
+.dashboard-main,
+.dashboard-content,
+.dashboard-page,
+.shop-dashboard-page,
+.shop-products-page,
+.shop-profile-page,
+.shop-location-page,
+.admin-page,
+.admin-users-page,
+.admin-stores-page {
+  background: #EFF2F4;
+}
+
+/* ---------- Public pages that often contain tables/cards ---------- */
+.store-products-page,
+.summary-page-wrap,
+.favorites-page,
+.match-stores-page,
+.hardware-finder-page {
+  background: #EFF2F4;
+}
+
+/* ทำให้พื้นที่หลักสูงเต็มหน้าหน่อย จะได้เห็นสีพื้นหลังชัด */
+.customer-main,
+.customer-page-main,
+.dashboard-main,
+.content-page,
+.public-content-page,
+.shop-dashboard-page,
+.shop-products-page,
+.shop-profile-page,
+.shop-location-page,
+.admin-page,
+.admin-users-page,
+.admin-stores-page,
+.favorites-page,
+.match-stores-page,
+.hardware-finder-page,
+.summary-page-wrap {
+  min-height: 100vh;
+}
+
+/* =========================================================
+   KEEP COMPONENTS WHITE
+   กันไม่ให้ table/card กลืนไปกับพื้นหลังหน้า
+   ========================================================= */
+
+.data-card,
+.section-card,
+.compact-table,
+.store-hero,
+.store-filters,
+.summary-sheet,
+.profile-card,
+.address-card,
+.contact-panel,
+.map-placeholder,
+.stat-card,
+.table-card,
+.content-card,
+.form-card,
+.page-card {
+  background: #ffffff;
+}
+
+/* ตาราง/การ์ดที่เป็นกล่อง ให้ดูแยกจากพื้นหลังชัดขึ้นนิดนึง */
+.data-card,
+.section-card,
+.compact-table,
+.store-hero,
+.store-filters,
+.profile-card,
+.address-card,
+.contact-panel,
+.map-placeholder,
+.stat-card,
+.table-card,
+.content-card,
+.form-card,
+.page-card {
+  border: 1px solid #D9E1E7;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* =========================================================
+   FAVORITES — PRODUCT SUMMARY SELECTION
+   ใช้เฉพาะแท็บสินค้าที่บันทึกไว้
+   ========================================================= */
+
+.favorites-product-selection-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.favorites-select-all-control {
+  min-height: 44px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cfd9e6;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #40566f;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.favorites-select-all-control:hover {
+  border-color: #8ebbf3;
+  background: #f7fbff;
+  color: #176fdc;
+}
+
+.favorites-select-all-control input,
+.favorites-row-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #1677f2;
+  cursor: pointer;
+}
+
+.favorites-select-all-control input:disabled {
+  cursor: not-allowed;
+}
+
+.favorites-select-all-control:has(input:disabled) {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.favorites-summary-btn {
+  min-height: 44px;
+  padding: 0 15px;
+  border: 1px solid #1677f2;
+  border-radius: 9px;
+  background: #1677f2;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: "Noto Sans Thai", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+.favorites-summary-btn:hover:not(:disabled) {
+  background: #0d67d9;
+  border-color: #0d67d9;
+  transform: translateY(-1px);
+}
+
+.favorites-summary-btn strong {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.favorites-summary-btn:disabled {
+  border-color: #d8e0e8;
+  background: #e9eef3;
+  color: #94a2b1;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* คอลัมน์ checkbox ด้านขวาสุด */
+.favorites-select-heading,
+.favorites-select-cell {
+  width: 72px;
+  min-width: 72px;
+  text-align: center !important;
+}
+
+.favorites-select-cell {
+  vertical-align: middle !important;
+}
+
+.favorites-row-checkbox {
+  display: inline-block;
+}
+
+/* กดตรงไหนของแถวก็เลือกได้ ยกเว้นปุ่มจัดการ */
+.favorites-product-selectable-row {
+  cursor: pointer;
+  transition: background .14s ease, box-shadow .14s ease;
+}
+
+.favorites-product-selectable-row:hover {
+  background: #f7fbff !important;
+}
+
+.favorites-product-selectable-row.selected {
+  background: #edf6ff !important;
+  box-shadow: inset 4px 0 0 #1677f2;
+}
+
+.favorites-product-selectable-row.selected:hover {
+  background: #e7f2ff !important;
+}
+
+.favorites-product-selectable-row.selected .favorites-product-cell strong {
+  color: #0d5fc7;
+}
+
+/* ทำให้ toolbar ยืดหยุ่นเวลาเพิ่มปุ่ม */
+.favorites-unified-toolbar {
+  flex-wrap: wrap;
+}
+
+.favorites-unified-toolbar .favorites-search-box {
+  min-width: 260px;
+  flex: 1 1 360px;
+}
+
+@media (max-width: 900px) {
+  .favorites-product-selection-tools {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 620px) {
+  .favorites-product-selection-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .favorites-select-all-control,
+  .favorites-summary-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
