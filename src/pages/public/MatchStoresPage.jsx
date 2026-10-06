@@ -1,24 +1,24 @@
 import {
 
-  ArrowLeft,
+  ArrowLeft,
 
-  Clock3,
+  Clock3,
 
-  ExternalLink,
+  ExternalLink,
 
-  Heart,
+  Heart,
 
-  MapPin,
+  MapPin,
 
-  Phone,
+  Phone,
 
-  Printer,
+  Printer,
 
-  Search,
+  Search,
 
-  ShoppingBag,
+  ShoppingBag,
 
-  Store,
+  Store,
 
 } from 'lucide-react';
 
@@ -26,11 +26,11 @@ import {
 
 import {
 
-  useEffect,
+  useEffect,
 
-  useMemo,
+  useMemo,
 
-  useState,
+  useState,
 
 } from 'react';
 
@@ -38,9 +38,9 @@ import {
 
 import {
 
-  useLocation,
+  useLocation,
 
-  useNavigate,
+  useNavigate,
 
 } from 'react-router-dom';
 
@@ -77,17 +77,17 @@ import { buildStorage } from '../../utils/buildStorage';
 
 const getName = (item) =>
 
-  item?.displayName ||
+  item?.displayName ||
 
-  item?.displayname ||
+  item?.displayname ||
 
-  item?.hardwareName ||
+  item?.hardwareName ||
 
-  item?.productName ||
+  item?.productName ||
 
-  item?.name ||
+  item?.name ||
 
-  '-';
+  '-';
 
 
 
@@ -95,11 +95,11 @@ const getName = (item) =>
 
 const getId = (item) =>
 
-  item?.masterId ??
+  item?.masterId ??
 
-  item?.hardwareId ??
+  item?.hardwareId ??
 
-  item?.id;
+  item?.id;
 
 
 
@@ -107,31 +107,31 @@ const getId = (item) =>
 
 const getNumberOrNull = (value) => {
 
-  if (
+  if (
 
-    value === '' ||
+    value === '' ||
 
-    value === null ||
+    value === null ||
 
-    value === undefined
+    value === undefined
 
-  ) {
+  ) {
 
-    return null;
+    return null;
 
-  }
-
-
-
-  const number = Number(value);
+  }
 
 
 
-  return Number.isFinite(number)
+  const number = Number(value);
 
-    ? number
 
-    : null;
+
+  return Number.isFinite(number)
+
+    ? number
+
+    : null;
 
 };
 
@@ -175,55 +175,55 @@ function StorePreviewMap({
 
 function getLocation(
 
-  timeout = 5000
+  timeout = 5000
 
 ) {
 
-  if (!navigator.geolocation) {
+  if (!navigator.geolocation) {
 
-    return Promise.resolve(null);
+    return Promise.resolve(null);
 
-  }
-
-
-
-  return new Promise(
-
-    (resolve) => {
-
-      navigator.geolocation.getCurrentPosition(
-
-        ({ coords }) =>
-
-          resolve({
-
-            latitude: coords.latitude,
-
-            longitude: coords.longitude,
-
-          }),
+  }
 
 
 
-        () => resolve(null),
+  return new Promise(
+
+    (resolve) => {
+
+      navigator.geolocation.getCurrentPosition(
+
+        ({ coords }) =>
+
+          resolve({
+
+            latitude: coords.latitude,
+
+            longitude: coords.longitude,
+
+          }),
 
 
 
-        {
+        () => resolve(null),
 
-          enableHighAccuracy: false,
 
-          timeout,
 
-          maximumAge: 300000,
+        {
 
-        }
+          enableHighAccuracy: false,
 
-      );
+          timeout,
 
-    }
+          maximumAge: 300000,
 
-  );
+        }
+
+      );
+
+    }
+
+  );
 
 }
 
@@ -233,3158 +233,3173 @@ function getLocation(
 
 export default function MatchStoresPage() {
 
-  const location = useLocation();
+  const location = useLocation();
 
-  const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { user } = useAuth();
 
 
 
-  const [selected] = useState(
+  const [selected] = useState(
 
-    () =>
+    () =>
 
-      location.state?.selected ||
+      location.state?.selected ||
 
-      buildStorage.getSelected()
+      buildStorage.getSelected()
 
-  );
+  );
 
 
 
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState('');
 
-  const [actionError, setActionError] = useState('');
+  const [actionError, setActionError] = useState('');
 
-  const [sort, setSort] = useState('price');
+  const [sort, setSort] = useState('price');
 
 
 
-  /*
+  /*
 
-   * checkbox สำหรับใบสรุปรายการ
+   * checkbox สำหรับใบสรุปรายการ
 
-   * เก็บ shopProductId ที่ User ติ๊กไว้เท่านั้น
+   * เก็บ shopProductId ที่ User ติ๊กไว้เท่านั้น
 
-   */
+   */
 
-  const [
+  const [
 
-    summarySelectedIds,
+    summarySelectedIds,
 
-    setSummarySelectedIds,
+    setSummarySelectedIds,
 
-  ] = useState([]);
+  ] = useState([]);
 
 
 
-  /*
+  /*
 
-   * Favorite Product
+   * Favorite Product
 
-   */
+   */
 
-  const [
+  const [
 
-    favoriteIds,
+    favoriteIds,
 
-    setFavoriteIds,
+    setFavoriteIds,
 
-  ] = useState(() => new Set());
+  ] = useState(() => new Set());
 
 
 
-  const [
+  const [
 
-    favoriteBusyIds,
+    favoriteBusyIds,
 
-    setFavoriteBusyIds,
+    setFavoriteBusyIds,
 
-  ] = useState(() => new Set());
+  ] = useState(() => new Set());
 
 
 
-  /*
+  /*
 
-   * Store Modal
+   * Store Modal
 
-   */
+   */
 
-  const [
+  const [
 
-    storeModalOpen,
+    storeModalOpen,
 
-    setStoreModalOpen,
+    setStoreModalOpen,
 
-  ] = useState(false);
+  ] = useState(false);
 
 
 
-  const [
+  const [
 
-    selectedStore,
+    selectedStore,
 
-    setSelectedStore,
+    setSelectedStore,
 
-  ] = useState(null);
+  ] = useState(null);
 
 
 
-  const [
+  const [
 
-    storeLoading,
+    storeLoading,
 
-    setStoreLoading,
+    setStoreLoading,
 
-  ] = useState(false);
+  ] = useState(false);
 
 
 
-  const [
+  const [
 
-    storeError,
+    storeError,
 
-    setStoreError,
+    setStoreError,
 
-  ] = useState('');
+  ] = useState('');
 
 
 
 
 
-  const hardwareList = useMemo(
+  const hardwareList = useMemo(
 
-    () =>
+    () =>
 
-      Object.entries(selected)
+      Object.entries(selected)
 
-        .map(
+        .map(
 
-          ([
+          ([
 
-            category,
+            category,
 
-            items,
+            items,
 
-          ]) => {
+          ]) => {
 
-            const list = (
+            const list = (
 
-              Array.isArray(items)
+              Array.isArray(items)
 
-                ? items
+                ? items
 
-                : [items]
+                : [items]
 
-            ).filter(
+            ).filter(
 
-              (item) =>
+              (item) =>
 
-                item &&
+                item &&
 
-                getId(item) != null
+                getId(item) != null
 
-            );
+            );
 
 
 
-            const ids = list.map(getId);
+            const ids = list.map(getId);
 
 
 
-            if (!ids.length) {
+            if (!ids.length) {
 
-              return null;
+              return null;
 
-            }
+            }
 
 
 
-            return {
+            return {
 
-              category,
+              category,
 
 
 
-              masterId:
+              masterId:
 
-                ids.length === 1
+                ids.length === 1
 
-                  ? ids[0]
+                  ? ids[0]
 
-                  : ids,
+                  : ids,
 
-            };
+            };
 
-          }
+          }
 
-        )
+        )
 
-        .filter(Boolean),
+        .filter(Boolean),
 
 
 
-    [selected]
+    [selected]
 
-  );
+  );
 
 
 
 
 
-  const selectedItems = useMemo(
+  const selectedItems = useMemo(
 
-    () =>
+    () =>
 
-      Object.entries(selected)
+      Object.entries(selected)
 
-        .flatMap(
+        .flatMap(
 
-          ([
+          ([
 
-            category,
+            category,
 
-            items,
+            items,
 
-          ]) =>
+          ]) =>
 
-            (
+            (
 
-              Array.isArray(items)
+              Array.isArray(items)
 
-                ? items
+                ? items
 
-                : [items]
+                : [items]
 
-            )
+            )
 
-              .filter(
+              .filter(
 
-                (item) =>
+                (item) =>
 
-                  item &&
+                  item &&
 
-                  getId(item) != null
+                  getId(item) != null
 
-              )
+              )
 
-              .map(
+              .map(
 
-                (item) => ({
+                (item) => ({
 
-                  category,
+                  category,
 
-                  item,
+                  item,
 
-                })
+                })
 
-              )
+              )
 
-        ),
+        ),
 
 
 
-    [selected]
+    [selected]
 
-  );
+  );
 
 
 
 
 
-  const selectedItemCount =
+  const selectedItemCount =
 
-    selectedItems.length;
+    selectedItems.length;
 
 
 
 
 
-  /*
+  /*
 
-   * โหลด Favorite ที่ User เคยกดไว้
+   * โหลด Favorite ที่ User เคยกดไว้
 
-   * เพื่อให้หัวใจแสดงสถานะถูกต้องตอนเปิดหน้า
+   * เพื่อให้หัวใจแสดงสถานะถูกต้องตอนเปิดหน้า
 
-   */
+   */
 
-  useEffect(() => {
+  useEffect(() => {
 
-    const role =
+    const role =
 
-      String(
+      String(
 
-        user?.role || ''
+        user?.role || ''
 
-      ).toUpperCase();
+      ).toUpperCase();
 
 
 
-    if (
+    if (
 
-      role !== 'USER' &&
+      role !== 'USER' &&
 
-      role !== 'CUSTOMER'
+      role !== 'CUSTOMER'
 
-    ) {
+    ) {
 
-      return undefined;
+      return undefined;
 
-    }
+    }
 
 
 
-    let active = true;
+    let active = true;
 
 
 
-    const loadFavorites =
+    const loadFavorites =
 
-      async () => {
+      async () => {
 
-        try {
+        try {
 
-          const response =
+          const response =
 
-            await userService
+            await userService
 
-              .favoriteProducts({
+              .favoriteProducts({
 
-                page: 1,
+                page: 1,
 
-                limit: 100,
+                limit: 100,
 
-              });
+              });
 
 
 
-          if (!active) {
+          if (!active) {
 
-            return;
+            return;
 
-          }
+          }
 
 
 
-          const ids = new Set(
+          const ids = new Set(
 
-            (
+            (
 
-              Array.isArray(
+              Array.isArray(
 
-                response?.data
+                response?.data
 
-              )
+              )
 
-                ? response.data
+                ? response.data
 
-                : []
+                : []
 
-            )
+            )
 
-              .map(
+              .map(
 
-                (item) =>
+                (item) =>
 
-                  item?.shopProductId
+                  item?.shopProductId
 
-              )
+              )
 
-              .filter(
+              .filter(
 
-                (id) =>
+                (id) =>
 
-                  id !== null &&
+                  id !== null &&
 
-                  id !== undefined
+                  id !== undefined
 
-              )
+              )
 
-              .map(String)
+              .map(String)
 
-          );
+          );
 
 
 
-          setFavoriteIds(ids);
+          setFavoriteIds(ids);
 
 
 
-        } catch {
+        } catch {
 
-          /*
+          /*
 
-           * Favorite เป็นข้อมูลเสริม
+           * Favorite เป็นข้อมูลเสริม
 
-           * ถ้าโหลดไม่ได้ยังให้หน้า Matching ทำงานต่อ
+           * ถ้าโหลดไม่ได้ยังให้หน้า Matching ทำงานต่อ
 
-           */
+           */
 
-        }
+        }
 
-      };
+      };
 
 
 
-    loadFavorites();
+    loadFavorites();
 
 
 
-    return () => {
+    return () => {
 
-      active = false;
+      active = false;
 
-    };
+    };
 
-  }, [
+  }, [
 
-    user?.role,
+    user?.role,
 
-  ]);
+  ]);
 
 
 
 
 
-  /*
+  /*
 
-   * Matching Stores
+   * Matching Stores
 
-   */
+   */
 
-  useEffect(() => {
+  useEffect(() => {
 
-    let active = true;
+    let active = true;
 
 
 
-    const run =
+    const run =
 
-      async () => {
+      async () => {
 
-        if (!hardwareList.length) {
+        if (!hardwareList.length) {
 
-          setError(
+          setError(
 
-            'ยังไม่ได้เลือกฮาร์ดแวร์ กรุณากลับไปเลือกสินค้าก่อน'
+            'ยังไม่ได้เลือกฮาร์ดแวร์ กรุณากลับไปเลือกสินค้าก่อน'
 
-          );
+          );
 
 
 
-          setLoading(false);
+          setLoading(false);
 
 
 
-          return;
+          return;
 
-        }
+        }
 
 
 
-        setLoading(true);
+        setLoading(true);
 
-        setError('');
+        setError('');
 
-        setActionError('');
+        setActionError('');
 
 
 
-        try {
+        try {
 
-          const userLocation =
+          const userLocation =
 
-            await getLocation();
+            await getLocation();
 
 
 
-          const payload = {
+          const payload = {
 
-            hardwareList,
+            hardwareList,
 
 
 
-            ...(userLocation
+            ...(userLocation
 
-              ? {
+              ? {
 
-                userLocation,
+                  userLocation,
 
-              }
+                }
 
-              : {}),
+              : {}),
 
-          };
+          };
 
 
 
-          const response =
+          const response =
 
-            await hardwareService
+            await hardwareService
 
-              .matchStores(payload);
+              .matchStores(payload);
 
 
 
-          if (active) {
+          if (active) {
 
-            setStores(
+            setStores(
 
-              Array.isArray(
+              Array.isArray(
 
-                response?.data
+                response?.data
 
-              )
+              )
 
-                ? response.data
+                ? response.data
 
-                : []
+                : []
 
-            );
+            );
 
 
 
-            /*
+            /*
 
-             * ทุกครั้งที่ค้นหาร้านใหม่
+             * ทุกครั้งที่ค้นหาร้านใหม่
 
-             * ให้ User เลือก checkbox ใหม่เอง
+             * ให้ User เลือก checkbox ใหม่เอง
 
-             */
+             */
 
-            setSummarySelectedIds([]);
+            setSummarySelectedIds([]);
 
-          }
+          }
 
 
 
-        } catch (err) {
+        } catch (err) {
 
-          if (active) {
+          if (active) {
 
-            setError(
+            setError(
 
-              getApiErrorMessage(
+              getApiErrorMessage(
 
-                err,
+                err,
 
-                'ค้นหาร้านค้าที่ตรงกับสเปคไม่สำเร็จ'
+                'ค้นหาร้านค้าที่ตรงกับสเปคไม่สำเร็จ'
 
-              )
+              )
 
-            );
+            );
 
-          }
+          }
 
 
 
-        } finally {
+        } finally {
 
-          if (active) {
+          if (active) {
 
-            setLoading(false);
+            setLoading(false);
 
-          }
+          }
 
-        }
+        }
 
-      };
+      };
 
 
 
-    run();
+    run();
 
 
 
-    return () => {
+    return () => {
 
-      active = false;
+      active = false;
 
-    };
+    };
 
-  }, [
+  }, [
 
-    hardwareList,
+    hardwareList,
 
-  ]);
+  ]);
 
 
 
 
 
-  const sortedStores = useMemo(
+  const sortedStores = useMemo(
 
-    () =>
+    () =>
 
-      [...stores].sort(
+      [...stores].sort(
 
-        (a, b) =>
+        (a, b) =>
 
-          sort === 'distance'
+          sort === 'distance'
 
-            ? Number(
+            ? Number(
 
-              a.distanceKm ??
+                a.distanceKm ??
 
-              Number.MAX_SAFE_INTEGER
+                Number.MAX_SAFE_INTEGER
 
-            ) -
+              ) -
 
-            Number(
+              Number(
 
-              b.distanceKm ??
+                b.distanceKm ??
 
-              Number.MAX_SAFE_INTEGER
+                Number.MAX_SAFE_INTEGER
 
-            )
+              )
 
 
 
-            : Number(
+            : Number(
 
-              a.totalPrice ??
+                a.totalPrice ??
 
-              Number.MAX_SAFE_INTEGER
+                Number.MAX_SAFE_INTEGER
 
-            ) -
+              ) -
 
-            Number(
+              Number(
 
-              b.totalPrice ??
+                b.totalPrice ??
 
-              Number.MAX_SAFE_INTEGER
+                Number.MAX_SAFE_INTEGER
 
-            )
+              )
 
-      ),
+      ),
 
 
 
-    [
+    [
 
-      stores,
+      stores,
 
-      sort,
+      sort,
 
-    ]
+    ]
 
-  );
+  );
 
 
 
 
 
-  const isSummaryChecked = (
+  const isSummaryChecked = (
 
-    shopProductId
+    shopProductId
 
-  ) =>
+  ) =>
 
-    summarySelectedIds.some(
+    summarySelectedIds.some(
 
-      (id) =>
+      (id) =>
 
-        String(id) ===
+        String(id) ===
 
-        String(shopProductId)
+        String(shopProductId)
 
-    );
+    );
 
 
 
 
 
-  const toggleSummaryProduct = (
+  const toggleSummaryProduct = (
 
-    shopProductId
+    shopProductId
 
-  ) => {
+  ) => {
 
-    if (
+    if (
 
-      shopProductId === null ||
+      shopProductId === null ||
 
-      shopProductId === undefined
+      shopProductId === undefined
 
-    ) {
+    ) {
 
-      return;
+      return;
 
-    }
+    }
 
 
 
-    setSummarySelectedIds(
+    setSummarySelectedIds(
 
-      (previous) => {
+      (previous) => {
 
-        const exists =
+        const exists =
 
-          previous.some(
+          previous.some(
 
-            (id) =>
+            (id) =>
 
-              String(id) ===
+              String(id) ===
 
-              String(shopProductId)
+              String(shopProductId)
 
-          );
+          );
 
 
 
-        if (exists) {
+        if (exists) {
 
-          return previous.filter(
+          return previous.filter(
 
-            (id) =>
+            (id) =>
 
-              String(id) !==
+              String(id) !==
 
-              String(shopProductId)
+              String(shopProductId)
 
-          );
+          );
 
-        }
+        }
 
 
 
-        return [
+        return [
 
-          ...previous,
+          ...previous,
 
-          shopProductId,
+          shopProductId,
 
-        ];
+        ];
 
-      }
+      }
 
-    );
+    );
 
-  };
+  };
 
 
 
 
 
-  const openSummary = () => {
+  const openSummary = () => {
 
-    const ids = [
+    const ids = [
 
-      ...new Map(
+      ...new Map(
 
-        summarySelectedIds.map(
+        summarySelectedIds.map(
 
-          (id) => [
+          (id) => [
 
-            String(id),
+            String(id),
 
-            id,
+            id,
 
-          ]
+          ]
 
-        )
+        )
 
-      ).values(),
+      ).values(),
 
-    ];
+    ];
 
 
 
-    if (!ids.length) {
+    if (!ids.length) {
 
-      setActionError(
+      setActionError(
 
-        'กรุณาติ๊กเลือกสินค้าอย่างน้อย 1 รายการก่อนสร้างใบสรุป'
+        'กรุณาติ๊กเลือกสินค้าอย่างน้อย 1 รายการก่อนสร้างใบสรุป'
 
-      );
+      );
 
 
 
-      return;
+      return;
 
-    }
+    }
 
 
 
-    buildStorage.setSummaryProductIds(ids);
+    buildStorage.setSummaryProductIds(ids);
 
 
 
-    navigate(
+    navigate(
 
-      '/summary',
+      '/summary',
 
-      {
+      {
 
-        state: {
+        state: {
 
-          shopProductIds: ids,
+          shopProductIds: ids,
 
-        },
+        },
 
-      }
+      }
 
-    );
+    );
 
-  };
+  };
 
 
 
 
 
-  const toggleFavoriteProduct =
+  const toggleFavoriteProduct =
 
-    async (
+    async (
 
-      shopProductId
+      shopProductId
 
-    ) => {
+    ) => {
 
-      if (
+      if (
 
-        shopProductId === null ||
+        shopProductId === null ||
 
-        shopProductId === undefined
+        shopProductId === undefined
 
-      ) {
+      ) {
 
-        return;
+        return;
 
-      }
+      }
 
 
 
-      const role =
+      const role =
 
-        String(
+        String(
 
-          user?.role || ''
+          user?.role || ''
 
-        ).toUpperCase();
+        ).toUpperCase();
 
 
 
-      if (!user) {
+      if (!user) {
 
-        navigate(
+        navigate(
 
-          '/login',
+          '/login',
 
-          {
+          {
 
-            state: {
+            state: {
 
-              from:
+              from:
 
-                location.pathname,
+                location.pathname,
 
-            },
+            },
 
-          }
+          }
 
-        );
+        );
 
 
 
-        return;
+        return;
 
-      }
+      }
 
 
 
-      if (
+      if (
 
-        role !== 'USER' &&
+        role !== 'USER' &&
 
-        role !== 'CUSTOMER'
+        role !== 'CUSTOMER'
 
-      ) {
+      ) {
 
-        setActionError(
+        setActionError(
 
-          'การบันทึกสินค้าสำหรับบัญชีลูกค้าเท่านั้น'
+          'การบันทึกสินค้าสำหรับบัญชีลูกค้าเท่านั้น'
 
-        );
+        );
 
 
 
-        return;
+        return;
 
-      }
+      }
 
 
 
-      const key =
+      const key =
 
-        String(shopProductId);
+        String(shopProductId);
 
 
 
-      if (
+      if (
 
-        favoriteBusyIds.has(key)
+        favoriteBusyIds.has(key)
 
-      ) {
+      ) {
 
-        return;
+        return;
 
-      }
+      }
 
 
 
-      const currentlyFavorite =
+      const currentlyFavorite =
 
-        favoriteIds.has(key);
+        favoriteIds.has(key);
 
 
 
-      setActionError('');
+      setActionError('');
 
 
 
-      setFavoriteBusyIds(
+      setFavoriteBusyIds(
 
-        (previous) => {
+        (previous) => {
 
-          const next =
+          const next =
 
-            new Set(previous);
+            new Set(previous);
 
 
 
-          next.add(key);
+          next.add(key);
 
 
 
-          return next;
+          return next;
 
-        }
+        }
 
-      );
+      );
 
 
 
-      try {
+      try {
 
-        if (currentlyFavorite) {
+        if (currentlyFavorite) {
 
-          await userService
+          await userService
 
-            .removeFavoriteProduct(
+            .removeFavoriteProduct(
 
-              shopProductId
+              shopProductId
 
-            );
+            );
 
 
 
-        } else {
+        } else {
 
-          await userService
+          await userService
 
-            .addFavoriteProduct(
+            .addFavoriteProduct(
 
-              shopProductId
+              shopProductId
 
-            );
+            );
 
-        }
+        }
 
 
 
-        setFavoriteIds(
+        setFavoriteIds(
 
-          (previous) => {
+          (previous) => {
 
-            const next =
+            const next =
 
-              new Set(previous);
+              new Set(previous);
 
 
 
-            if (currentlyFavorite) {
+            if (currentlyFavorite) {
 
-              next.delete(key);
+              next.delete(key);
 
-            } else {
+            } else {
 
-              next.add(key);
+              next.add(key);
 
-            }
+            }
 
 
 
-            return next;
+            return next;
 
-          }
+          }
 
-        );
+        );
 
 
 
-      } catch (err) {
+      } catch (err) {
 
-        setActionError(
+        setActionError(
 
-          getApiErrorMessage(
+          getApiErrorMessage(
 
-            err,
+            err,
 
-            currentlyFavorite
+            currentlyFavorite
 
-              ? 'ยกเลิกบันทึกสินค้าไม่สำเร็จ'
+              ? 'ยกเลิกบันทึกสินค้าไม่สำเร็จ'
 
-              : 'บันทึกสินค้าไม่สำเร็จ'
+              : 'บันทึกสินค้าไม่สำเร็จ'
 
-          )
+          )
 
-        );
+        );
 
 
 
-      } finally {
+      } finally {
 
-        setFavoriteBusyIds(
+        setFavoriteBusyIds(
 
-          (previous) => {
+          (previous) => {
 
-            const next =
+            const next =
 
-              new Set(previous);
+              new Set(previous);
 
 
 
-            next.delete(key);
+            next.delete(key);
 
 
 
-            return next;
+            return next;
 
-          }
+          }
 
-        );
+        );
 
-      }
+      }
 
-    };
+    };
 
 
 
 
 
-  const openStoreModal =
+  const openStoreModal =
 
-    async (
+    async (
 
-      shop
+      shop
 
-    ) => {
+    ) => {
 
-      setSelectedStore({
+      setSelectedStore({
 
-        ...shop,
+        ...shop,
 
 
 
-        profileImageUrl:
+        profileImageUrl:
 
-          shop.profileImageUrl ||
+          shop.profileImageUrl ||
 
-          shop.shopImageUrl ||
+          shop.shopImageUrl ||
 
-          '',
+          '',
 
 
 
-        latitude:
+        latitude:
 
-          shop.latitude ??
+          shop.latitude ??
 
-          shop.shopLatitude ??
+          shop.shopLatitude ??
 
-          null,
+          null,
 
 
 
-        longitude:
+        longitude:
 
-          shop.longitude ??
+          shop.longitude ??
 
-          shop.shopLongitude ??
+          shop.shopLongitude ??
 
-          null,
+          null,
 
-      });
+      });
 
 
 
-      setStoreModalOpen(true);
+      setStoreModalOpen(true);
 
-      setStoreLoading(true);
+      setStoreLoading(true);
 
-      setStoreError('');
+      setStoreError('');
 
 
 
-      try {
+      try {
 
-        const response =
+        const response =
 
-          await storeService
+          await storeService
 
-            .profile(
+            .profile(
 
-              shop.shopId
+              shop.shopId
 
-            );
+            );
 
 
 
-        const rawProfile =
+        const rawProfile =
 
-          response?.data || {};
+          response?.data || {};
 
 
 
-        const profileShop =
+        const profileShop =
 
-          rawProfile?.shop ||
+          rawProfile?.shop ||
 
-          rawProfile;
+          rawProfile;
 
 
 
-        /*
+        /*
 
-         * Mock เก่าของโปรเจกต์อาจคืน Profile ของ JJ Computer
+         * Mock เก่าของโปรเจกต์อาจคืน Profile ของ JJ Computer
 
-         * ให้ทุก shopId
+         * ให้ทุก shopId
 
-         * จึง merge เฉพาะเมื่อเป็นร้านเดียวกัน
+         * จึง merge เฉพาะเมื่อเป็นร้านเดียวกัน
 
-         * ส่วน Backend จริงจะใช้ข้อมูลจากร้านนั้นตามปกติ
+         * ส่วน Backend จริงจะใช้ข้อมูลจากร้านนั้นตามปกติ
 
-         */
+         */
 
-        const profileShopId =
+        const profileShopId =
 
-          profileShop?.shopId ??
+          profileShop?.shopId ??
 
-          rawProfile?.shopId;
+          rawProfile?.shopId;
 
 
 
-        const sameShop =
+        const sameShop =
 
-          profileShopId == null ||
+          profileShopId == null ||
 
-          String(profileShopId) ===
+          String(profileShopId) ===
 
-          String(shop.shopId);
+            String(shop.shopId);
 
 
 
-        if (sameShop) {
+        if (sameShop) {
 
-          setSelectedStore(
+          setSelectedStore(
 
-            (previous) => ({
+            (previous) => ({
 
-              ...previous,
+              ...previous,
 
-              ...profileShop,
+              ...profileShop,
 
 
 
-              contactChannels:
+              contactChannels:
 
-                rawProfile
+                rawProfile
 
-                  ?.contactChannels ||
+                  ?.contactChannels ||
 
-                profileShop
+                profileShop
 
-                  ?.contactChannels ||
+                  ?.contactChannels ||
 
-                profileShop
+                profileShop
 
-                  ?.contact ||
+                  ?.contact ||
 
-                previous
+                previous
 
-                  ?.contactChannels ||
+                  ?.contactChannels ||
 
-                previous
+                previous
 
-                  ?.contact ||
+                  ?.contact ||
 
-                {},
+                {},
 
 
 
-              location:
+              location:
 
-                rawProfile?.location ||
+                rawProfile?.location ||
 
-                profileShop?.location ||
+                profileShop?.location ||
 
-                previous?.location ||
+                previous?.location ||
 
-                {},
+                {},
 
 
 
-              profileImageUrl:
+              profileImageUrl:
 
-                profileShop
+                profileShop
 
-                  ?.profileImageUrl ||
+                  ?.profileImageUrl ||
 
-                previous
+                previous
 
-                  ?.profileImageUrl ||
+                  ?.profileImageUrl ||
 
-                '',
+                '',
 
 
 
-              latitude:
+              latitude:
 
-                profileShop
+                profileShop
 
-                  ?.latitude ??
+                  ?.latitude ??
 
-                rawProfile
+                rawProfile
 
-                  ?.location
+                  ?.location
 
-                  ?.latitude ??
+                  ?.latitude ??
 
-                previous
+                previous
 
-                  ?.latitude ??
+                  ?.latitude ??
 
-                null,
+                null,
 
 
 
-              longitude:
+              longitude:
 
-                profileShop
+                profileShop
 
-                  ?.longitude ??
+                  ?.longitude ??
 
-                rawProfile
+                rawProfile
 
-                  ?.location
+                  ?.location
 
-                  ?.longitude ??
+                  ?.longitude ??
 
-                previous
+                previous
 
-                  ?.longitude ??
+                  ?.longitude ??
 
-                null,
+                null,
 
-            })
+            })
 
-          );
+          );
 
-        }
+        }
 
 
 
-      } catch (err) {
+      } catch (err) {
 
-        setStoreError(
+        setStoreError(
 
-          getApiErrorMessage(
+          getApiErrorMessage(
 
-            err,
+            err,
 
-            'โหลดข้อมูลร้านค้าไม่สำเร็จ'
+            'โหลดข้อมูลร้านค้าไม่สำเร็จ'
 
-          )
+          )
 
-        );
+        );
 
 
 
-      } finally {
+      } finally {
 
-        setStoreLoading(false);
+        setStoreLoading(false);
 
-      }
+      }
 
-    };
+    };
 
 
 
 
 
-  const closeStoreModal =
+  const closeStoreModal =
 
-    () => {
+    () => {
 
-      setStoreModalOpen(false);
+      setStoreModalOpen(false);
 
-      setStoreError('');
+      setStoreError('');
 
 
 
-      window.setTimeout(
+      window.setTimeout(
 
-        () => {
+        () => {
 
-          setSelectedStore(null);
+          setSelectedStore(null);
 
-        },
+        },
 
-        150
+        150
 
-      );
+      );
 
-    };
+    };
 
 
 
 
 
-  const modalLocation =
+  const modalLocation =
 
-    selectedStore?.location ||
+    selectedStore?.location ||
 
-    {};
+    {};
 
 
 
-  const contact =
+  const contact =
 
-    selectedStore
+    selectedStore
 
-      ?.contactChannels ||
+      ?.contactChannels ||
 
-    selectedStore
+    selectedStore
 
-      ?.contact ||
+      ?.contact ||
 
-    {};
+    {};
 
 
 
 
 
-  const fullAddress =
+  const fullAddress =
 
-    selectedStore
+    selectedStore
 
-      ?.fullAddress ||
+      ?.fullAddress ||
 
-    [
+    [
 
-      selectedStore
+      selectedStore
 
-        ?.addressText ??
+        ?.addressText ??
 
-      modalLocation
+        modalLocation
 
-        ?.addressText,
+          ?.addressText,
 
 
 
-      selectedStore
+      selectedStore
 
-        ?.subDistrict ??
+        ?.subDistrict ??
 
-      modalLocation
+        modalLocation
 
-        ?.subDistrict,
+          ?.subDistrict,
 
 
 
-      selectedStore
+      selectedStore
 
-        ?.district ??
+        ?.district ??
 
-      modalLocation
+        modalLocation
 
-        ?.district,
+          ?.district,
 
 
 
-      selectedStore
+      selectedStore
 
-        ?.province ??
+        ?.province ??
 
-      modalLocation
+        modalLocation
 
-        ?.province,
+          ?.province,
 
 
 
-      selectedStore
+      selectedStore
 
-        ?.zipCode ??
+        ?.zipCode ??
 
-      modalLocation
+        modalLocation
 
-        ?.zipCode,
+          ?.zipCode,
 
-    ]
+    ]
 
-      .filter(Boolean)
+      .filter(Boolean)
 
-      .join(' ') ||
+      .join(' ') ||
 
-    '-';
+    '-';
 
 
 
 
 
-  const modalLatitude =
+  const modalLatitude =
 
-    selectedStore?.latitude ??
+    selectedStore?.latitude ??
 
-    selectedStore
+    selectedStore
 
-      ?.shopLatitude ??
+      ?.shopLatitude ??
 
-    modalLocation
+    modalLocation
 
-      ?.latitude ??
+      ?.latitude ??
 
-    null;
+    null;
 
 
 
 
 
-  const modalLongitude =
+  const modalLongitude =
 
-    selectedStore?.longitude ??
+    selectedStore?.longitude ??
 
-    selectedStore
+    selectedStore
 
-      ?.shopLongitude ??
+      ?.shopLongitude ??
 
-    modalLocation
+    modalLocation
 
-      ?.longitude ??
+      ?.longitude ??
 
-    null;
+    null;
 
 
 
 
 
-  const hasModalLocation =
+  const hasModalLocation =
 
-    getNumberOrNull(
+    getNumberOrNull(
 
-      modalLatitude
+      modalLatitude
 
-    ) !== null &&
+    ) !== null &&
 
-    getNumberOrNull(
+    getNumberOrNull(
 
-      modalLongitude
+      modalLongitude
 
-    ) !== null;
+    ) !== null;
 
 
 
 
 
-  return (
+  return (
 
-    <div className="hardware-finder-workspace compare-page-workspace">
+    <div className="hardware-finder-workspace compare-page-workspace">
 
 
 
-      {/* Sidebar เลือก Hardware ยังคงอยู่หน้า Matching */}
+      {/* Sidebar เลือก Hardware ยังคงอยู่หน้า Matching */}
 
-      <HardwareSidebar
+      <HardwareSidebar
 
-        active=""
+        active=""
 
-        selected={selected}
+        selected={selected}
 
-        onSelect={
+        onSelect={
 
-          (category) =>
+          (category) =>
 
-            navigate(
+            navigate(
 
-              `/hardware?category=${category}`
+              `/hardware?category=${category}`
 
-            )
+            )
 
-        }
+        }
 
-      />
+      />
 
 
 
 
 
-      <main className="match-results-main">
+      <main className="match-results-main">
 
 
 
-        <button
+        <button
 
-          type="button"
+          type="button"
 
-          className="back-inline-btn"
+          className="back-inline-btn"
 
-          onClick={
+          onClick={
 
-            () =>
+            () =>
 
-              navigate('/hardware')
+              navigate('/hardware')
 
-          }
+          }
 
-        >
+        >
 
-          <ArrowLeft size={16} />
+          <ArrowLeft size={16} />
 
-          กลับไปแก้รายการ
+          กลับไปแก้รายการ
 
-        </button>
+        </button>
 
 
 
 
 
-        <div className="compare-topbar">
+        <div className="compare-topbar">
 
 
 
-          <div className="compare-topbar-copy">
+          <div className="compare-topbar-copy">
 
 
 
-            <h2>
+            <h2>
 
-              พบร้านค้าที่ตรงกับสินค้าที่เลือก{' '}
+              พบร้านค้าที่ตรงกับสินค้าที่เลือก{' '}
 
-              {selectedItemCount}{' '}
+              {selectedItemCount}{' '}
 
-              รายการ
+              รายการ
 
-            </h2>
+            </h2>
 
 
 
-            <p>
+            <p>
 
-              ระบบเปรียบเทียบสินค้าจากร้านค้าที่มีสินค้าในรายการที่คุณเลือก
+              ระบบเปรียบเทียบสินค้าจากร้านค้าที่มีสินค้าในรายการที่คุณเลือก
 
-            </p>
+            </p>
 
 
 
 
 
-            <div className="compare-selected-summary">
+            <div className="compare-selected-summary">
 
 
 
-              {selectedItems.map(
+              {selectedItems.map(
 
-                ({
+                ({
 
-                  category,
+                  category,
 
-                  item,
+                  item,
 
-                }) => (
+                }) => (
 
-                  <span
+                  <span
 
-                    key={`${category}-${getId(item)}`}
+                    key={`${category}-${getId(item)}`}
 
-                  >
+                  >
 
-                    <b>
+                    <b>
 
-                      {category}
+                      {category}
 
-                    </b>
+                    </b>
 
 
 
-                    {getName(item)}
+                    {getName(item)}
 
-                  </span>
+                  </span>
 
-                )
+                )
 
-              )}
+              )}
 
 
 
-            </div>
+            </div>
 
 
 
-          </div>
+          </div>
 
 
 
 
 
-          <div className="compare-heading-actions">
+          <div className="compare-heading-actions">
 
 
 
-            <label className="compare-sort-control">
+            <label className="compare-sort-control">
 
 
 
-              <span>
+              <span>
 
-                เรียงลำดับจาก :
+                เรียงลำดับจาก :
 
-              </span>
+              </span>
 
 
 
-              <select
+              <select
 
-                value={sort}
+                value={sort}
 
-                onChange={
+                onChange={
 
-                  (event) =>
+                  (event) =>
 
-                    setSort(
+                    setSort(
 
-                      event.target.value
+                      event.target.value
 
-                    )
+                    )
 
-                }
+                }
 
-              >
+              >
 
-                <option value="price">
+                <option value="price">
 
-                  ราคาต่ำ - สูง
+                  ราคาต่ำ - สูง
 
-                </option>
+                </option>
 
 
 
-                <option value="distance">
+                <option value="distance">
 
-                  ใกล้ที่สุด
+                  ใกล้ที่สุด
 
-                </option>
+                </option>
 
-              </select>
+              </select>
 
 
 
-            </label>
+            </label>
 
 
 
 
 
-            <button
+            <button
 
-              type="button"
+              type="button"
 
-              className="compare-summary-btn"
+              className="compare-summary-btn"
 
-              disabled={
+              disabled={
 
-                summarySelectedIds.length ===
+                summarySelectedIds.length ===
 
-                0
+                0
 
-              }
+              }
 
-              onClick={openSummary}
+              onClick={openSummary}
 
-            >
+            >
 
-              <Printer size={17} />
+              <Printer size={17} />
 
 
 
-              สรุปรายการฮาร์ดแวร์
+              สรุปรายการฮาร์ดแวร์
 
 
 
-              <span>
+              <span>
 
-                ({summarySelectedIds.length})
+                ({summarySelectedIds.length})
 
-              </span>
+              </span>
 
-            </button>
+            </button>
 
 
 
-          </div>
+          </div>
 
 
 
-        </div>
+        </div>
 
 
 
 
 
-        {actionError && (
+        {actionError && (
 
-          <div className="inline-error compare-action-error">
+          <div className="inline-error compare-action-error">
 
-            {actionError}
+            {actionError}
 
-          </div>
+          </div>
 
-        )}
+        )}
 
 
 
 
 
-        {loading ? (
+        {loading ? (
 
-          <LoadingState label="กำลังจับคู่ร้านค้า..." />
+          <LoadingState label="กำลังจับคู่ร้านค้า..." />
 
 
 
-        ) : error ? (
+        ) : error ? (
 
-          <div className="empty-inline">
+          <div className="empty-inline">
 
-            {error}
+            {error}
 
-          </div>
+          </div>
 
 
 
-        ) : (
+        ) : (
 
-          <div className="compare-store-grid">
+          <div className="compare-store-grid">
 
 
 
-            {sortedStores.map(
+            {sortedStores.map(
 
-              (shop) => {
+              (shop) => {
 
-                const details =
+                const details =
 
-                  Array.isArray(
+                  Array.isArray(
 
-                    shop.details
+                    shop.details
 
-                  )
+                  )
 
-                    ? shop.details
+                    ? shop.details
 
-                    : [];
+                    : [];
 
 
 
-                const matchCount =
+                const matchCount =
 
-                  shop
+                  shop
 
-                    .hardwareMatchCount ??
+                    .hardwareMatchCount ??
 
-                  shop
+                  shop
 
-                    .matchCount ??
+                    .matchCount ??
 
-                  details.filter(
+                  details.filter(
 
-                    (item) =>
+                    (item) =>
 
-                      item
+                      item
 
-                        .isMatched !==
+                        .isMatched !==
 
-                      false &&
+                        false &&
 
-                      item
+                      item
 
-                        .productStatus !==
+                        .productStatus !==
 
-                      false
+                        false
 
-                  ).length;
+                  ).length;
 
 
 
 
 
-                return (
+                return (
 
-                  <article
+                  <article
 
-                    className="compare-store-card"
+                    className="compare-store-card"
 
-                    key={shop.shopId}
+                    key={shop.shopId}
 
-                  >
+                  >
 
 
 
-                    <div className="compare-store-head">
+                    <div className="compare-store-head">
 
 
 
-                      <div className="compare-store-icon">
+                      <div className="compare-store-icon">
 
 
 
-                        {shop
+                        {shop
 
-                          .shopImageUrl ? (
+                          .shopImageUrl ? (
 
-                          <img
+                          <img
 
-                            src={
+                            src={
 
-                              shop.shopImageUrl
+                              shop.shopImageUrl
 
-                            }
+                            }
 
-                            alt={
+                            alt={
 
-                              shop.shopName ||
+                              shop.shopName ||
 
-                              ''
+                              ''
 
-                            }
+                            }
 
-                          />
+                          />
 
-                        ) : (
+                        ) : (
 
-                          <ShoppingBag
+                          <ShoppingBag
 
-                            size={22}
+                            size={22}
 
-                          />
+                          />
 
-                        )}
+                        )}
 
 
 
-                      </div>
+                      </div>
 
 
 
 
 
-                      <div className="compare-store-copy">
+                      <div className="compare-store-copy">
 
 
 
-                        <h3>
+                        <h3>
 
-                          {shop.shopName}
+                          {shop.shopName}
 
-                        </h3>
+                        </h3>
 
 
 
-                        <p>
+                        <p>
 
-                          <MapPin size={14} />
+                          <MapPin size={14} />
 
 
 
-                          {shop.province ||
+                          {shop.province ||
 
-                            '-'}
+                            '-'}
 
 
 
-                          {shop.district
+                          {shop.district
 
-                            ? ` • ${shop.district}`
+                            ? ` • ${shop.district}`
 
-                            : ''}
+                            : ''}
 
 
 
-                          {shop.distanceKm !=
+                          {shop.distanceKm !=
 
-                            null
+                          null
 
-                            ? ` • ${shop.distanceKm} กม.`
+                            ? ` • ${shop.distanceKm} กม.`
 
-                            : ''}
+                            : ''}
 
-                        </p>
+                        </p>
 
 
 
-                        <small>
+                        <small>
 
-                          ตรงกับรายการ{' '}
+                          ตรงกับรายการ{' '}
 
-                          {matchCount}/
+                          {matchCount}/
 
-                          {selectedItemCount}{' '}
+                          {selectedItemCount}{' '}
 
-                          ชิ้น
+                          ชิ้น
 
-                        </small>
+                        </small>
 
 
 
-                      </div>
+                      </div>
 
 
 
-                    </div>
+                    </div>
 
 
 
 
 
-                    <div className="compare-product-list">
+                    <div className="compare-product-list">
 
 
 
-                      {selectedItems.map(
+                      {selectedItems.map(
 
-                        (
+                        (
 
-                          {
+                          {
 
-                            category,
+                            category,
 
-                            item:
+                            item:
 
-                            selectedItem,
+                              selectedItem,
 
-                          },
+                          },
 
-                          index
+                          index
 
-                        ) => {
+                        ) => {
 
-                          const selectedMasterId =
+                          const selectedMasterId =
 
-                            getId(
+                            getId(
 
-                              selectedItem
+                              selectedItem
 
-                            );
+                            );
 
 
 
-                          const matchedDetail =
+                          const matchedDetail =
 
-                            details.find(
+                            details.find(
 
-                              (detail) => {
+                              (detail) => {
 
-                                const detailCategory =
+                                const detailCategory =
 
-                                  String(
+                                  String(
 
-                                    detail
+                                    detail
 
-                                      ?.category ||
+                                      ?.category ||
 
-                                    ''
+                                    ''
 
-                                  )
+                                  )
 
-                                    .toUpperCase();
+                                    .toUpperCase();
 
 
 
-                                const selectedCategory =
+                                const selectedCategory =
 
-                                  String(
+                                  String(
 
-                                    category ||
+                                    category ||
 
-                                    ''
+                                    ''
 
-                                  )
+                                  )
 
-                                    .toUpperCase();
+                                    .toUpperCase();
 
 
 
-                                const detailMasterId =
+                                const detailMasterId =
 
-                                  detail
+                                  detail
 
-                                    ?.masterId ??
+                                    ?.masterId ??
 
-                                  detail
+                                  detail
 
-                                    ?.hardwareId;
+                                    ?.hardwareId;
 
 
 
-                                return (
+                                return (
 
-                                  detailCategory ===
+                                  detailCategory ===
 
-                                  selectedCategory &&
+                                    selectedCategory &&
 
-                                  String(
+                                  String(
 
-                                    detailMasterId
+                                    detailMasterId
 
-                                  ) ===
+                                  ) ===
 
-                                  String(
+                                    String(
 
-                                    selectedMasterId
+                                      selectedMasterId
 
-                                  )
+                                    )
 
-                                );
+                                );
 
-                              }
+                              }
 
-                            );
+                            );
 
 
 
-                          const shopProductId =
+                          const shopProductId =
 
-                            matchedDetail
+                            matchedDetail
 
-                              ?.shopProductId;
+                              ?.shopProductId;
 
 
 
-                          const unavailable =
+                          const unavailable =
 
-                            !matchedDetail ||
+                            !matchedDetail ||
 
-                            matchedDetail
+                            matchedDetail
 
-                              .isMatched ===
+                              .isMatched ===
 
-                            false ||
+                              false ||
 
-                            matchedDetail
+                            matchedDetail
 
-                              .productStatus ===
+                              .productStatus ===
 
-                            false ||
+                              false ||
 
-                            shopProductId ==
+                            shopProductId ==
 
-                            null;
+                              null;
 
-
-
-                          const favoriteKey =
-
-                            shopProductId !=
-
-                              null
-
-                              ? String(
-
-                                shopProductId
-
-                              )
-
-                              : '';
-
-
-
-                          const isFavorite =
-
-                            favoriteKey
-
-                              ? favoriteIds
-
-                                .has(
-
-                                  favoriteKey
-
-                                )
-
-                              : false;
-
-
-
-                          const favoriteBusy =
-
-                            favoriteKey
-
-                              ? favoriteBusyIds
-
-                                .has(
-
-                                  favoriteKey
-
-                                )
-
-                              : false;
-
-
-
-                          const checked =
-
-                            !unavailable &&
-
-                            isSummaryChecked(
-
-                              shopProductId
-
-                            );
-
-
-
-
-
-                          return (
-
-                            <div
-
-                              className={
-
-                                `compare-product-row ${unavailable
-
-                                  ? 'unavailable'
-
-                                  : ''
-
-                                }`
-
-                              }
-
-                              key={`${shop.shopId}-${category}-${selectedMasterId}-${index}`}
-
-                            >
-
-
-
-                              {/* หัวใจอยู่ซ้ายตาม Draft */}
-
-                              <button
-
-                                type="button"
-
-                                className={
-
-                                  `compare-product-heart ${isFavorite
-
-                                    ? 'active'
-
-                                    : ''
-
-                                  }`
-
-                                }
-
-                                disabled={
-
-                                  unavailable ||
-
-                                  favoriteBusy
-
-                                }
-
-                                onClick={
-
-                                  () =>
-
-                                    toggleFavoriteProduct(
-
-                                      shopProductId
-
-                                    )
-
-                                }
-
-                                title={
-
-                                  unavailable
-
-                                    ? 'ร้านนี้ไม่มีสินค้ารายการนี้'
-
-                                    : isFavorite
-
-                                      ? 'ยกเลิกบันทึกสินค้า'
-
-                                      : 'บันทึกสินค้า'
-
-                                }
-
-                                aria-label={
-
-                                  isFavorite
-
-                                    ? 'ยกเลิกบันทึกสินค้า'
-
-                                    : 'บันทึกสินค้า'
-
-                                }
-
-                              >
-
-                                <Heart
-
-                                  size={20}
-
-                                  fill={
-
-                                    isFavorite
-
-                                      ? 'currentColor'
-
-                                      : 'none'
-
-                                  }
-
-                                />
-
-                              </button>
-
-
-
-
-
-                              <div className="compare-product-info">
-
-
-
-                                <div className="compare-product-name">
-
-
-
-                                  <b>
-
-                                    {category}
-
-                                  </b>
-
-
-
-                                  <span>
-
-                                    {' • '}
-
-                                    {getName(
-
-                                      selectedItem
-
-                                    )}
-
-                                  </span>
-
-
-
-                                </div>
-
-
-
-
-
-                                {unavailable && (
-
-                                  <small className="compare-product-unavailable">
-
-                                    ไม่มีสินค้า
-
-                                  </small>
-
-                                )}
-
-
-
-                              </div>
-
-
-
-
-
-                              <strong className="compare-product-price">
-
-
-
-                                {!unavailable &&
-
-                                  matchedDetail
-
-                                    ?.price !=
-
-                                  null
-
-                                  ? `${Number(
-
-                                    matchedDetail
-
-                                      .price
-
-                                  ).toLocaleString()}.-`
-
-                                  : '-'}
-
-
-
-                              </strong>
-
-
-
-
-
-                              {/* checkbox ขวาสุด ใช้เลือกเข้าใบสรุป */}
-
-                              <label
-
-                                className={
-
-                                  `compare-summary-checkbox ${unavailable
-
-                                    ? 'disabled'
-
-                                    : ''
-
-                                  }`
-
-                                }
-
-                                title={
-
-                                  unavailable
-
-                                    ? 'สินค้านี้ไม่สามารถนำไปสรุปรายการได้'
-
-                                    : 'เลือกสินค้าเข้าหน้าสรุปรายการ'
-
-                                }
-
-                              >
-
-
-
-                                <input
-
-                                  type="checkbox"
-
-                                  checked={checked}
-
-                                  disabled={
-
-                                    unavailable
-
-                                  }
-
-                                  onChange={
-
-                                    () =>
-
-                                      toggleSummaryProduct(
-
-                                        shopProductId
-
-                                      )
-
-                                  }
-
-                                  aria-label={`เลือก ${getName(selectedItem)} เข้าหน้าสรุปรายการ`}
-
-                                />
-
-
-
-                              </label>
-
-
-
-                            </div>
-
-                          );
-
-                        }
-
-                      )}
-
-
-
-                    </div>
-
-
-
-
-
-                    <div className="compare-store-total">
-
-
-
-                      <span>
-
-                        ราคารวม:
-
-                      </span>
-
-
-
-                      <strong>
-
-                        {Number(
-
-                          shop.totalPrice ||
-
-                          0
-
-                        ).toLocaleString()}
-
-                      </strong>
-
-
-
-                      <small>
-
-                        บาท
-
-                      </small>
-
-
-
-                    </div>
-
-
-
-
-
-                    <div className="compare-store-actions">
-
-
-
-                      <button
-
-                        type="button"
-
-                        onClick={
-
-                          () =>
-
-                            openStoreModal(
-
-                              shop
-
-                            )
-
-                        }
-
-                      >
-
-                        <Store size={16} />
-
-                        ดูข้อมูลร้านค้า
-
-                      </button>
-
-
-
-
-
-                      <button
-
-                        type="button"
-
-                        onClick={
-
-                          () =>
-
-                            navigate(
-
-                              `/stores/${shop.shopId}/products`
-
-                            )
-
-                        }
-
-                      >
-
-                        <ShoppingBag size={16} />
-
-                        ดูสินค้า
-
-                      </button>
-
-
-
-                    </div>
-
-
-
-                  </article>
-
-                );
-
-              }
-
-            )}
-
-
-
-          </div>
-
-        )}
-
-
-
-
-
-        {!loading &&
-
-          !error &&
-
-          !sortedStores.length && (
-
-            <div className="empty-inline">
-
-              ยังไม่พบร้านค้าที่ตรงกับรายการที่เลือก
-
-            </div>
-
-          )}
-
-
-
-
-
-        <div className="compare-note">
-
-
-
-          <Search size={17} />
-
-
-
-          <div>
-
-            <strong>
-
-              หมายเหตุ
-
-            </strong>
-
-
-
-            <p>
-
-              ราคาและสถานะสินค้าอาจเปลี่ยนแปลงได้ กรุณาตรวจสอบกับร้านค้าก่อนตัดสินใจซื้อ
-
-            </p>
-
-          </div>
-
-
-
-        </div>
-
-
-
-      </main>
-
-
-
-
-
-      {/* STORE DETAIL MODAL */}
-
-      <Modal
-
-        show={storeModalOpen}
-
-        onHide={closeStoreModal}
-
-        centered
-
-        size="xl"
-
-        scrollable
-
-        dialogClassName="public-store-detail-dialog"
-
-      >
-
-
-
-        <Modal.Header closeButton>
-
-
-
-          <div className="public-store-modal-title">
-
-
-
-            <Modal.Title>
-
-              ข้อมูลร้านค้า
-
-            </Modal.Title>
-
-
-
-            <span>
-
-              รายละเอียดและตำแหน่งของร้านค้า
-
-            </span>
-
-
-
-          </div>
-
-
-
-        </Modal.Header>
-
-
-
-
-
-        <Modal.Body>
-
-
-
-          {storeLoading &&
-
-            !selectedStore ? (
-
-            <LoadingState label="กำลังโหลดข้อมูลร้านค้า..." />
-
-
-
-          ) : (
-
-            <>
-
-
-
-              {storeError && (
-
-                <div className="inline-error">
-
-                  {storeError}
-
-                </div>
-
-              )}
-
-
-
-
-
-              {selectedStore && (
-
-                <>
-
-
-
-                  <section className="public-store-modal-header">
-
-
-
-                    <div className="public-store-modal-logo">
-
-
-
-                      {selectedStore
-
-                        .profileImageUrl ? (
-
-                        <img
-
-                          src={
-
-                            selectedStore
-
-                              .profileImageUrl
-
+                          /*
+                           * ไม่แสดงสินค้าที่ร้านไม่มี
+                           * แสดงเฉพาะรายการที่ร้านมีจริงเท่านั้น
+                           */
+                          if (unavailable) {
+                            return null;
                           }
 
-                          alt={
 
-                            selectedStore
 
-                              .shopName ||
 
-                            ''
+                          const favoriteKey =
 
-                          }
+                            shopProductId !=
 
-                        />
+                            null
 
-                      ) : (
+                              ? String(
 
-                        <ShoppingBag
+                                  shopProductId
 
-                          size={30}
+                                )
 
-                        />
+                              : '';
 
-                      )}
 
 
+                          const isFavorite =
 
-                    </div>
+                            favoriteKey
 
+                              ? favoriteIds
 
+                                  .has(
 
+                                    favoriteKey
 
+                                  )
 
-                    <div>
+                              : false;
 
 
 
-                      <h2>
+                          const favoriteBusy =
 
-                        {selectedStore
+                            favoriteKey
 
-                          .shopName ||
+                              ? favoriteBusyIds
 
-                          '-'}
+                                  .has(
 
-                      </h2>
+                                    favoriteKey
 
+                                  )
 
+                              : false;
 
-                      <p>
 
-                        {selectedStore
 
-                          .description ||
+                          const checked =
 
-                          selectedStore
+                            !unavailable &&
 
-                            .shopDescription ||
+                            isSummaryChecked(
 
-                          'ไม่มีคำอธิบายร้านค้า'}
+                              shopProductId
 
-                      </p>
+                            );
 
 
 
-                    </div>
 
 
+                          return (
 
-                  </section>
+                            <div
 
+                              className={
 
+                                `compare-product-row ${
 
+                                  unavailable
 
+                                    ? 'unavailable'
 
-                  <div className="public-store-modal-grid">
+                                    : ''
 
+                                }`
 
+                              }
 
-                    <section className="public-store-modal-card">
+                              key={`${shop.shopId}-${category}-${selectedMasterId}-${index}`}
 
+                            >
 
 
-                      <h3>
 
-                        รายละเอียดร้านค้า
+                              {/* หัวใจอยู่ซ้ายตาม Draft */}
 
-                      </h3>
+                              <button
 
+                                type="button"
 
+                                className={
 
+                                  `compare-product-heart ${
 
+                                    isFavorite
 
-                      <div className="public-store-info-row">
+                                      ? 'active'
 
+                                      : ''
 
+                                  }`
 
-                        <Clock3 size={19} />
+                                }
 
+                                disabled={
 
+                                  unavailable ||
 
-                        <div>
+                                  favoriteBusy
 
-                          <strong>
+                                }
 
-                            เวลาทำการ
+                                onClick={
 
-                          </strong>
+                                  () =>
 
+                                    toggleFavoriteProduct(
 
+                                      shopProductId
 
-                          <span>
+                                    )
 
-                            {selectedStore
+                                }
 
-                              .operatingHours ||
+                                title={
 
-                              '-'}
+                                  unavailable
 
-                          </span>
+                                    ? 'ร้านนี้ไม่มีสินค้ารายการนี้'
 
-                        </div>
+                                    : isFavorite
 
+                                      ? 'ยกเลิกบันทึกสินค้า'
 
+                                      : 'บันทึกสินค้า'
 
-                      </div>
+                                }
 
+                                aria-label={
 
+                                  isFavorite
 
+                                    ? 'ยกเลิกบันทึกสินค้า'
 
+                                    : 'บันทึกสินค้า'
 
-                      <div className="public-store-info-row">
+                                }
 
+                              >
 
+                                <Heart
 
-                        <Phone size={19} />
+                                  size={20}
 
+                                  fill={
 
+                                    isFavorite
 
-                        <div>
+                                      ? 'currentColor'
 
-                          <strong>
+                                      : 'none'
 
-                            เบอร์โทรศัพท์
+                                  }
 
-                          </strong>
+                                />
 
+                              </button>
 
 
-                          <span>
 
-                            {contact
 
-                              ?.phone ||
 
-                              selectedStore
+                              <div className="compare-product-info">
 
-                                .ownerPhone ||
 
-                              '-'}
 
-                          </span>
+                                <div className="compare-product-name">
 
-                        </div>
 
 
+                                  <b>
 
-                      </div>
+                                    {category}
 
+                                  </b>
 
 
 
+                                  <span>
 
-                      <div className="public-store-contact">
+                                    {' • '}
 
+                                    {getName(
 
+                                      selectedItem
 
-                        <div>
+                                    )}
 
-                          <span>
+                                  </span>
 
-                            Line
 
-                          </span>
 
+                                </div>
 
 
-                          <strong>
 
-                            {contact
 
-                              ?.line ||
 
-                              contact
+                                {unavailable && (
 
-                                ?.lineId ||
+                                  <small className="compare-product-unavailable">
 
-                              '-'}
+                                    ไม่มีสินค้า
 
-                          </strong>
+                                  </small>
 
-                        </div>
+                                )}
 
 
 
+                              </div>
 
 
-                        <div>
 
-                          <span>
 
-                            Facebook
 
-                          </span>
+                              <strong className="compare-product-price">
 
 
 
-                          <strong>
+                                {!unavailable &&
 
-                            {contact
+                                matchedDetail
 
-                              ?.facebook ||
+                                  ?.price !=
 
-                              '-'}
+                                  null
 
-                          </strong>
+                                  ? `${Number(
 
-                        </div>
+                                      matchedDetail
 
+                                        .price
 
+                                    ).toLocaleString()}.-`
 
+                                  : '-'}
 
 
-                        <div>
 
-                          <span>
+                              </strong>
 
-                            เว็บไซต์
 
-                          </span>
 
 
 
-                          <strong>
+                              {/* checkbox ขวาสุด ใช้เลือกเข้าใบสรุป */}
 
-                            {contact
+                              <label
 
-                              ?.website ||
+                                className={
 
-                              '-'}
+                                  `compare-summary-checkbox ${
 
-                          </strong>
+                                    unavailable
 
-                        </div>
+                                      ? 'disabled'
 
+                                      : ''
 
+                                  }`
 
-                      </div>
+                                }
 
+                                title={
 
+                                  unavailable
 
-                    </section>
+                                    ? 'สินค้านี้ไม่สามารถนำไปสรุปรายการได้'
 
+                                    : 'เลือกสินค้าเข้าหน้าสรุปรายการ'
 
+                                }
 
+                              >
 
 
-                    <section className="public-store-modal-card">
 
+                                <input
 
+                                  type="checkbox"
 
-                      <h3>
+                                  checked={checked}
 
-                        ตำแหน่งร้านค้า
+                                  disabled={
 
-                      </h3>
+                                    unavailable
 
+                                  }
 
+                                  onChange={
 
-                      <StorePreviewMap
+                                    () =>
 
-                        latitude={
+                                      toggleSummaryProduct(
 
-                          modalLatitude
+                                        shopProductId
 
-                        }
+                                      )
 
-                        longitude={
+                                  }
 
-                          modalLongitude
+                                  aria-label={`เลือก ${getName(selectedItem)} เข้าหน้าสรุปรายการ`}
 
-                        }
+                                />
 
-                        shopName={
 
-                          selectedStore
 
-                            .shopName
+                              </label>
 
-                        }
 
-                      />
 
+                            </div>
 
+                          );
 
+                        }
 
+                      )}
 
-                      {hasModalLocation && (
 
-                        <a
 
-                          className="outline-btn compact public-store-map-link"
+                    </div>
 
-                          href={`https://www.google.com/maps/search/?api=1&query=${modalLatitude},${modalLongitude}`}
 
-                          target="_blank"
 
-                          rel="noreferrer"
 
-                        >
 
-                          <ExternalLink size={15} />
+                    <div className="compare-store-total">
 
-                          เปิด Google Maps
 
-                        </a>
 
-                      )}
+                      <span>
 
+                        ราคารวม:
 
+                      </span>
 
-                    </section>
 
 
+                      <strong>
 
-                  </div>
+                        {Number(
 
+                          shop.totalPrice ||
 
+                          0
 
+                        ).toLocaleString()}
 
+                      </strong>
 
-                  <section className="public-store-modal-address">
 
 
+                      <small>
 
-                    <MapPin size={20} />
+                        บาท
 
+                      </small>
 
 
-                    <div>
 
-                      <strong>
+                    </div>
 
-                        ที่อยู่ร้านค้า
 
-                      </strong>
 
 
 
-                      <span>
+                    <div className="compare-store-actions">
 
-                        {fullAddress}
 
-                      </span>
 
-                    </div>
+                      <button
 
+                        type="button"
 
+                        onClick={
 
-                  </section>
+                          () =>
 
+                            openStoreModal(
 
+                              shop
 
-                </>
+                            )
 
-              )}
+                        }
 
+                      >
 
+                        <Store size={16} />
 
-            </>
+                        ดูข้อมูลร้านค้า
 
-          )}
+                      </button>
 
 
 
-        </Modal.Body>
 
 
+                      <button
 
+                        type="button"
 
+                        onClick={
 
-        <Modal.Footer>
+                          () =>
 
+                            navigate(
 
+                              `/stores/${shop.shopId}/products`
 
-          {selectedStore && (
+                            )
 
-            <button
+                        }
 
-              type="button"
+                      >
 
-              className="primary-btn"
+                        <ShoppingBag size={16} />
 
-              onClick={
+                        ดูสินค้า
 
-                () => {
+                      </button>
 
-                  const shopId =
 
-                    selectedStore
 
-                      .shopId;
+                    </div>
 
 
 
-                  closeStoreModal();
+                  </article>
 
+                );
 
+              }
 
-                  navigate(
+            )}
 
-                    `/stores/${shopId}/products`
 
-                  );
 
-                }
+          </div>
 
-              }
+        )}
 
-            >
 
-              <ShoppingBag size={16} />
 
-              ดูสินค้าทั้งหมดของร้าน
 
-            </button>
 
-          )}
+        {!loading &&
 
+          !error &&
 
+          !sortedStores.length && (
 
+            <div className="empty-inline">
 
+              ยังไม่พบร้านค้าที่ตรงกับรายการที่เลือก
 
-          <button
+            </div>
 
-            type="button"
+          )}
 
-            className="outline-btn"
 
-            onClick={closeStoreModal}
 
-          >
 
-            ปิด
 
-          </button>
+        <div className="compare-note">
 
 
 
-        </Modal.Footer>
+          <Search size={17} />
 
 
 
-      </Modal>
+          <div>
 
+            <strong>
 
+              หมายเหตุ
 
-    </div>
+            </strong>
 
-  );
+
+
+            <p>
+
+              ราคาและสถานะสินค้าอาจเปลี่ยนแปลงได้ กรุณาตรวจสอบกับร้านค้าก่อนตัดสินใจซื้อ
+
+            </p>
+
+          </div>
+
+
+
+        </div>
+
+
+
+      </main>
+
+
+
+
+
+      {/* STORE DETAIL MODAL */}
+
+      <Modal
+
+        show={storeModalOpen}
+
+        onHide={closeStoreModal}
+
+        centered
+
+        size="xl"
+
+        scrollable
+
+        dialogClassName="public-store-detail-dialog"
+
+      >
+
+
+
+        <Modal.Header closeButton>
+
+
+
+          <div className="public-store-modal-title">
+
+
+
+            <Modal.Title>
+
+              ข้อมูลร้านค้า
+
+            </Modal.Title>
+
+
+
+            <span>
+
+              รายละเอียดและตำแหน่งของร้านค้า
+
+            </span>
+
+
+
+          </div>
+
+
+
+        </Modal.Header>
+
+
+
+
+
+        <Modal.Body>
+
+
+
+          {storeLoading &&
+
+          !selectedStore ? (
+
+            <LoadingState label="กำลังโหลดข้อมูลร้านค้า..." />
+
+
+
+          ) : (
+
+            <>
+
+
+
+              {storeError && (
+
+                <div className="inline-error">
+
+                  {storeError}
+
+                </div>
+
+              )}
+
+
+
+
+
+              {selectedStore && (
+
+                <>
+
+
+
+                  <section className="public-store-modal-header">
+
+
+
+                    <div className="public-store-modal-logo">
+
+
+
+                      {selectedStore
+
+                        .profileImageUrl ? (
+
+                        <img
+
+                          src={
+
+                            selectedStore
+
+                              .profileImageUrl
+
+                          }
+
+                          alt={
+
+                            selectedStore
+
+                              .shopName ||
+
+                            ''
+
+                          }
+
+                        />
+
+                      ) : (
+
+                        <ShoppingBag
+
+                          size={30}
+
+                        />
+
+                      )}
+
+
+
+                    </div>
+
+
+
+
+
+                    <div>
+
+
+
+                      <h2>
+
+                        {selectedStore
+
+                          .shopName ||
+
+                          '-'}
+
+                      </h2>
+
+
+
+                      <p>
+
+                        {selectedStore
+
+                          .description ||
+
+                          selectedStore
+
+                            .shopDescription ||
+
+                          'ไม่มีคำอธิบายร้านค้า'}
+
+                      </p>
+
+
+
+                    </div>
+
+
+
+                  </section>
+
+
+
+
+
+                  <div className="public-store-modal-grid">
+
+
+
+                    <section className="public-store-modal-card">
+
+
+
+                      <h3>
+
+                        รายละเอียดร้านค้า
+
+                      </h3>
+
+
+
+
+
+                      <div className="public-store-info-row">
+
+
+
+                        <Clock3 size={19} />
+
+
+
+                        <div>
+
+                          <strong>
+
+                            เวลาทำการ
+
+                          </strong>
+
+
+
+                          <span>
+
+                            {selectedStore
+
+                              .operatingHours ||
+
+                              '-'}
+
+                          </span>
+
+                        </div>
+
+
+
+                      </div>
+
+
+
+
+
+                      <div className="public-store-info-row">
+
+
+
+                        <Phone size={19} />
+
+
+
+                        <div>
+
+                          <strong>
+
+                            เบอร์โทรศัพท์
+
+                          </strong>
+
+
+
+                          <span>
+
+                            {contact
+
+                              ?.phone ||
+
+                              selectedStore
+
+                                .ownerPhone ||
+
+                              '-'}
+
+                          </span>
+
+                        </div>
+
+
+
+                      </div>
+
+
+
+
+
+                      <div className="public-store-contact">
+
+
+
+                        <div>
+
+                          <span>
+
+                            Line
+
+                          </span>
+
+
+
+                          <strong>
+
+                            {contact
+
+                              ?.line ||
+
+                              contact
+
+                                ?.lineId ||
+
+                              '-'}
+
+                          </strong>
+
+                        </div>
+
+
+
+
+
+                        <div>
+
+                          <span>
+
+                            Facebook
+
+                          </span>
+
+
+
+                          <strong>
+
+                            {contact
+
+                              ?.facebook ||
+
+                              '-'}
+
+                          </strong>
+
+                        </div>
+
+
+
+
+
+                        <div>
+
+                          <span>
+
+                            เว็บไซต์
+
+                          </span>
+
+
+
+                          <strong>
+
+                            {contact
+
+                              ?.website ||
+
+                              '-'}
+
+                          </strong>
+
+                        </div>
+
+
+
+                      </div>
+
+
+
+                    </section>
+
+
+
+
+
+                    <section className="public-store-modal-card">
+
+
+
+                      <h3>
+
+                        ตำแหน่งร้านค้า
+
+                      </h3>
+
+
+
+                      <StorePreviewMap
+
+                        latitude={
+
+                          modalLatitude
+
+                        }
+
+                        longitude={
+
+                          modalLongitude
+
+                        }
+
+                        shopName={
+
+                          selectedStore
+
+                            .shopName
+
+                        }
+
+                      />
+
+
+
+
+
+                      {hasModalLocation && (
+
+                        <a
+
+                          className="outline-btn compact public-store-map-link"
+
+                          href={`https://www.google.com/maps/search/?api=1&query=${modalLatitude},${modalLongitude}`}
+
+                          target="_blank"
+
+                          rel="noreferrer"
+
+                        >
+
+                          <ExternalLink size={15} />
+
+                          เปิด Google Maps
+
+                        </a>
+
+                      )}
+
+
+
+                    </section>
+
+
+
+                  </div>
+
+
+
+
+
+                  <section className="public-store-modal-address">
+
+
+
+                    <MapPin size={20} />
+
+
+
+                    <div>
+
+                      <strong>
+
+                        ที่อยู่ร้านค้า
+
+                      </strong>
+
+
+
+                      <span>
+
+                        {fullAddress}
+
+                      </span>
+
+                    </div>
+
+
+
+                  </section>
+
+
+
+                </>
+
+              )}
+
+
+
+            </>
+
+          )}
+
+
+
+        </Modal.Body>
+
+
+
+
+
+        <Modal.Footer>
+
+
+
+          {selectedStore && (
+
+            <button
+
+              type="button"
+
+              className="primary-btn"
+
+              onClick={
+
+                () => {
+
+                  const shopId =
+
+                    selectedStore
+
+                      .shopId;
+
+
+
+                  closeStoreModal();
+
+
+
+                  navigate(
+
+                    `/stores/${shopId}/products`
+
+                  );
+
+                }
+
+              }
+
+            >
+
+              <ShoppingBag size={16} />
+
+              ดูสินค้าทั้งหมดของร้าน
+
+            </button>
+
+          )}
+
+
+
+
+
+          <button
+
+            type="button"
+
+            className="outline-btn"
+
+            onClick={closeStoreModal}
+
+          >
+
+            ปิด
+
+          </button>
+
+
+
+        </Modal.Footer>
+
+
+
+      </Modal>
+
+
+
+    </div>
+
+  );
 
 }

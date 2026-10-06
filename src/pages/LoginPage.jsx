@@ -33,9 +33,31 @@ import {
 } from '../auth/AuthContext';
 
 
+/* =========================================================
+   SUSPENDED CHECK
+   ========================================================= */
+
+const isSuspendedUser = (
+  currentUser
+) =>
+  String(
+    currentUser?.userStatus ??
+    currentUser?.user_status ??
+    currentUser?.shopStatus ??
+    currentUser?.shop_status ??
+    currentUser?.storeStatus ??
+    currentUser?.store_status ??
+    ''
+  )
+    .trim()
+    .toUpperCase() ===
+  'SUSPENDED';
+
+
 const slides = [
   {
-    icon: SearchCheck,
+    icon:
+      SearchCheck,
 
     title:
       'ค้นหาฮาร์ดแวร์ได้ง่ายขึ้น',
@@ -45,7 +67,8 @@ const slides = [
   },
 
   {
-    icon: Store,
+    icon:
+      Store,
 
     title:
       'เปรียบเทียบร้านค้าที่ตรงสเปค',
@@ -55,7 +78,8 @@ const slides = [
   },
 
   {
-    icon: MapPin,
+    icon:
+      MapPin,
 
     title:
       'ดูร้านและตำแหน่งบนแผนที่',
@@ -86,6 +110,10 @@ export default function LoginPage() {
     location.state?.from;
 
 
+  /*
+   * AuthContext จะตั้ง Error นี้
+   * เมื่อเจอ user/shop ที่ถูก Suspend
+   */
   const suspendedOpen =
     error ===
     SUSPENDED_LOGIN_MESSAGE;
@@ -104,6 +132,26 @@ export default function LoginPage() {
     }
 
 
+    /*
+     * Safety Check อีกชั้น
+     *
+     * ต่อให้มี User หลุดเข้ามาใน Context
+     * ก็ห้าม Redirect ไปหน้า Role
+     * ถ้าสถานะเป็น SUSPENDED
+     */
+    if (
+      isSuspendedUser(
+        user
+      )
+    ) {
+      setError(
+        SUSPENDED_LOGIN_MESSAGE
+      );
+
+      return;
+    }
+
+
     if (
       user.role ===
       'ADMIN'
@@ -111,7 +159,8 @@ export default function LoginPage() {
       navigate(
         '/admin',
         {
-          replace: true,
+          replace:
+            true,
         }
       );
 
@@ -126,7 +175,8 @@ export default function LoginPage() {
       navigate(
         '/shop',
         {
-          replace: true,
+          replace:
+            true,
         }
       );
 
@@ -137,7 +187,8 @@ export default function LoginPage() {
     navigate(
       from || '/',
       {
-        replace: true,
+        replace:
+          true,
       }
     );
 
@@ -146,6 +197,7 @@ export default function LoginPage() {
     loading,
     from,
     navigate,
+    setError,
   ]);
 
 
@@ -154,13 +206,36 @@ export default function LoginPage() {
      ========================================================= */
 
   const onSuccess =
-    (loggedInUser) => {
+    (
+      loggedInUser
+    ) => {
+
+      /*
+       * Safety Check อีกครั้ง
+       *
+       * AuthContext ปกติจะ Block ไปแล้ว
+       * แต่ไม่ให้ LoginPage redirect
+       * SUSPENDED เด็ดขาด
+       */
+      if (
+        isSuspendedUser(
+          loggedInUser
+        )
+      ) {
+        setError(
+          SUSPENDED_LOGIN_MESSAGE
+        );
+
+        return;
+      }
+
 
       if (from) {
         navigate(
           from,
           {
-            replace: true,
+            replace:
+              true,
           }
         );
 
@@ -175,7 +250,8 @@ export default function LoginPage() {
         navigate(
           '/admin',
           {
-            replace: true,
+            replace:
+              true,
           }
         );
 
@@ -190,7 +266,8 @@ export default function LoginPage() {
         navigate(
           '/shop',
           {
-            replace: true,
+            replace:
+              true,
           }
         );
 
@@ -201,11 +278,16 @@ export default function LoginPage() {
       navigate(
         '/',
         {
-          replace: true,
+          replace:
+            true,
         }
       );
     };
 
+
+  /* =========================================================
+     CLOSE SUSPENDED MODAL
+     ========================================================= */
 
   const closeSuspendedModal =
     () => {
@@ -409,9 +491,23 @@ export default function LoginPage() {
           closeSuspendedModal
         }
         centered
+
+        /*
+         * ไม่ให้กดพื้นหลังแล้ว Modal หาย
+         */
         backdrop="static"
+
         keyboard={false}
+
         dialogClassName="suspended-login-modal"
+
+        /*
+         * CSS ตัวนี้มีอยู่แล้วใน
+         * src/styles.css
+         *
+         * ทำให้พื้นหลังหลัง Modal
+         * เป็นสีเทาโปร่ง
+         */
         backdropClassName="suspended-login-backdrop"
       >
 

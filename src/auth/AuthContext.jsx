@@ -8,8 +8,14 @@ import {
 } from 'react';
 
 import { authService } from '../services/authService';
+import { shopService } from '../services/shopService';
+
 import { tokenStorage } from './tokenStorage';
-import { normalizeRole } from './roles';
+
+import {
+  normalizeRole,
+  ROLES,
+} from './roles';
 
 
 const AuthContext =
@@ -30,20 +36,35 @@ const normalizeStatus = (value) =>
     .toUpperCase();
 
 
+const getPayloadData = (
+  payload
+) => {
+  if (
+    payload?.data &&
+    typeof payload.data ===
+    'object'
+  ) {
+    return payload.data;
+  }
+
+  return payload || {};
+};
+
+
 /*
- * รองรับหลายตำแหน่ง เผื่อ Backend ส่งกลับมาเป็น
+ * ตรวจได้ทั้ง
  *
  * user.userStatus
- * userStatus
+ * data.userStatus
  *
  * user.shopStatus
- * user.storeStatus
  * shop.shopStatus
  * store.shopStatus
- * shopStatus
- * storeStatus
+ * storeInfo.shopStatus
+ *
+ * เพื่อรองรับ Response หลายรูปแบบของ Backend
  */
-const isSuspendedAuthPayload = (
+const isSuspendedPayload = (
   payload
 ) => {
   if (!payload) {
@@ -52,10 +73,9 @@ const isSuspendedAuthPayload = (
 
 
   const data =
-    payload?.data &&
-    typeof payload.data === 'object'
-      ? payload.data
-      : payload;
+    getPayloadData(
+      payload
+    );
 
 
   const user =
@@ -72,7 +92,19 @@ const isSuspendedAuthPayload = (
     {};
 
 
-  /* USER STATUS */
+  const storeInfo =
+    data?.storeInfo ||
+    {};
+
+
+  const statusInfo =
+    data?.status ||
+    {};
+
+
+  /* =========================
+     USER STATUS
+     ========================= */
 
   const userStatus =
     user?.userStatus ??
@@ -91,7 +123,9 @@ const isSuspendedAuthPayload = (
   }
 
 
-  /* SHOP STATUS */
+  /* =========================
+     SHOP STATUS
+     ========================= */
 
   const shopStatuses = [
     user?.shopStatus,
@@ -105,6 +139,12 @@ const isSuspendedAuthPayload = (
 
     shop?.storeStatus,
     shop?.store_status,
+
+    storeInfo?.shopStatus,
+    storeInfo?.shop_status,
+
+    statusInfo?.shopStatus,
+    statusInfo?.shop_status,
 
     data?.shopStatus,
     data?.shop_status,
@@ -123,6 +163,53 @@ const isSuspendedAuthPayload = (
 };
 
 
+/*
+ * รองรับกรณี Backend ไม่คืน shopStatus
+ * แต่บล็อก API ร้านแล้วตอบข้อความว่า
+ * "ร้านค้าไม่พร้อมใช้งาน"
+ */
+const isSuspendedError = (
+  error
+) => {
+  if (
+    isSuspendedPayload(
+      error?.response?.data
+    )
+  ) {
+    return true;
+  }
+
+
+  const message =
+    String(
+      error?.response?.data
+        ?.message ||
+      error?.response?.data
+        ?.errorDetails ||
+      error?.message ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+
+
+  return (
+    message.includes(
+      'suspended'
+    ) ||
+    message.includes(
+      'ถูกระงับ'
+    ) ||
+    message.includes(
+      'ระงับการใช้งาน'
+    ) ||
+    message.includes(
+      'ร้านค้าไม่พร้อมใช้งาน'
+    )
+  );
+};
+
+
 const createSuspendedError =
   () => {
     const error =
@@ -130,15 +217,17 @@ const createSuspendedError =
         SUSPENDED_LOGIN_MESSAGE
       );
 
+
     error.code =
       'ACCOUNT_SUSPENDED';
+
 
     return error;
   };
 
 
 /* =========================================================
-   PROVIDER
+   AUTH PROVIDER
    ========================================================= */
 
 export function AuthProvider({
@@ -163,6 +252,97 @@ export function AuthProvider({
 
 
   /* =========================================================
+     BLOCK SUSPENDED SESSION
+     ========================================================= */
+
+  const rejectSuspendedSession =
+    useCallback(
+      () => {
+        /*
+         * สำคัญ:
+         * ถ้าถูก Suspend ต้องไม่เหลือ Token
+         * และต้องไม่เหลือ User ใน Context
+         */
+        tokenStorage.clear();
+
+        setUser(null);
+
+        setError(
+          SUSPENDED_LOGIN_MESSAGE
+        );
+      },
+      []
+    );
+
+
+  /* =========================================================
+     VERIFY SHOP STATUS
+     ========================================================= */
+
+  const verifyShopAccess =
+    useCallback(
+      async () => {
+        try {
+          /*
+           * ใช้ Dashboard เป็นตัวตรวจสิทธิ์ร้าน
+           *
+           * จากระบบปัจจุบัน:
+           * ร้านที่ใช้งานได้ -> API ผ่าน
+           * ร้าน SUSPENDED -> Backend ตอบ
+           * "ร้านค้าไม่พร้อมใช้งาน"
+           */
+          const response =
+            await shopService
+              .dashboard();
+
+
+          /*
+           * เผื่อ Backend ส่ง
+           * shopStatus กลับมาด้วย
+           */
+          if (
+            isSuspendedPayload(
+              response
+            )
+          ) {
+            throw createSuspendedError();
+          }
+
+
+          return true;
+
+        } catch (
+        shopError
+        ) {
+          /*
+           * ตรวจเฉพาะกรณี Suspend
+           */
+          if (
+            shopError?.code ===
+            'ACCOUNT_SUSPENDED' ||
+            isSuspendedError(
+              shopError
+            )
+          ) {
+            throw createSuspendedError();
+          }
+
+
+          /*
+           * ถ้าเป็น Error อื่น เช่น
+           * Network / Server 500
+           *
+           * ไม่ตีความว่าโดน Suspend
+           * เพื่อไม่ Block ผู้ใช้ผิดกรณี
+           */
+          return true;
+        }
+      },
+      []
+    );
+
+
+  /* =========================================================
      RESTORE SESSION
      ========================================================= */
 
@@ -179,6 +359,7 @@ export function AuthProvider({
 
         if (!token) {
           setUser(null);
+
           setLoading(false);
 
           return;
@@ -186,30 +367,28 @@ export function AuthProvider({
 
 
         try {
+          /*
+           * ตรวจ User จาก Token เดิม
+           */
           const response =
             await authService.me();
 
 
           const payload =
-            response?.data || {};
+            response?.data ||
+            {};
 
 
           /*
-           * ถ้าบัญชีหรือร้านถูก Suspend
-           * ห้ามให้ session เดิมกลับเข้าระบบด้วย
+           * ถ้า userStatus = SUSPENDED
+           * ห้าม Restore Session
            */
           if (
-            isSuspendedAuthPayload(
+            isSuspendedPayload(
               payload
             )
           ) {
-            tokenStorage.clear();
-
-            setUser(null);
-
-            setError(
-              SUSPENDED_LOGIN_MESSAGE
-            );
+            rejectSuspendedSession();
 
             return;
           }
@@ -219,29 +398,95 @@ export function AuthProvider({
             payload?.user;
 
 
-          setUser(
-            next
-              ? {
-                  ...next,
+          if (!next) {
+            tokenStorage.clear();
 
-                  role:
-                    normalizeRole(
-                      next.role
-                    ),
-                }
-              : null
+            setUser(null);
+
+            return;
+          }
+
+
+          const normalizedUser = {
+            ...next,
+
+            role:
+              normalizeRole(
+                next.role
+              ),
+          };
+
+
+          /*
+           * ถ้าเป็น SHOP
+           *
+           * userStatus อาจ ACTIVE
+           * แต่ตัวร้านอาจเป็น SUSPENDED
+           *
+           * จึงต้องตรวจสถานะร้านอีกชั้น
+           * ก่อนอนุญาตให้ Restore Session
+           */
+          if (
+            normalizedUser.role ===
+            ROLES.SHOP
+          ) {
+            try {
+              await verifyShopAccess();
+
+            } catch (
+            shopError
+            ) {
+              if (
+                shopError?.code ===
+                'ACCOUNT_SUSPENDED'
+              ) {
+                rejectSuspendedSession();
+
+                return;
+              }
+
+
+              throw shopError;
+            }
+          }
+
+
+          /*
+           * ผ่านทุกการตรวจแล้ว
+           * ถึงจะอนุญาตให้เข้าระบบ
+           */
+          setUser(
+            normalizedUser
           );
 
-        } catch {
-          tokenStorage.clear();
+          setError('');
 
-          setUser(null);
+        } catch (
+        authError
+        ) {
+          if (
+            authError?.code ===
+            'ACCOUNT_SUSPENDED' ||
+            isSuspendedError(
+              authError
+            )
+          ) {
+            rejectSuspendedSession();
+
+          } else {
+            tokenStorage.clear();
+
+            setUser(null);
+          }
 
         } finally {
           setLoading(false);
         }
       },
-      []
+      [
+        rejectSuspendedSession,
+        verifyShopAccess,
+      ]
     );
 
 
@@ -271,11 +516,12 @@ export function AuthProvider({
     );
 
 
-    return () =>
+    return () => {
       window.removeEventListener(
         'pcfinder:auth-expired',
         onExpired
       );
+    };
 
   }, [
     hydrate,
@@ -287,113 +533,168 @@ export function AuthProvider({
      ========================================================= */
 
   const loginWithGoogle =
-    async (
-      googleToken
-    ) => {
-
-      setError('');
-
-
-      let response;
+    useCallback(
+      async (
+        googleToken
+      ) => {
+        setError('');
 
 
-      try {
-        response =
-          await authService
-            .googleLogin(
-              googleToken
-            );
+        let response;
 
-      } catch (err) {
+
+        try {
+          response =
+            await authService
+              .googleLogin(
+                googleToken
+              );
+
+        } catch (
+        loginError
+        ) {
+          /*
+           * รองรับกรณี Backend
+           * ตอบ Error 4xx พร้อม
+           * userStatus = SUSPENDED
+           */
+          if (
+            isSuspendedPayload(
+              loginError
+                ?.response
+                ?.data
+            ) ||
+            isSuspendedError(
+              loginError
+            )
+          ) {
+            rejectSuspendedSession();
+
+            throw createSuspendedError();
+          }
+
+
+          throw loginError;
+        }
+
+
+        const payload =
+          response?.data;
+
+
+        /* =========================
+           CHECK USER STATUS
+           ========================= */
 
         /*
-         * รองรับกรณี Backend ตอบ 4xx
-         * แต่ยังส่ง status ของ account กลับมา
+         * สำคัญมาก:
+         *
+         * ตรวจ SUSPENDED
+         * ก่อนสร้าง Session ทุกครั้ง
          */
         if (
-          isSuspendedAuthPayload(
-            err?.response?.data
+          isSuspendedPayload(
+            payload
           )
         ) {
-          tokenStorage.clear();
-
-          setUser(null);
-
-          setError(
-            SUSPENDED_LOGIN_MESSAGE
-          );
+          rejectSuspendedSession();
 
           throw createSuspendedError();
         }
 
 
-        throw err;
-      }
+        if (
+          !payload
+            ?.accessToken ||
+          !payload
+            ?.user
+        ) {
+          throw new Error(
+            'ระบบตอบกลับข้อมูลเข้าสู่ระบบไม่ครบถ้วน'
+          );
+        }
 
 
-      const payload =
-        response?.data;
+        const normalizedUser = {
+          ...payload.user,
+
+          role:
+            normalizeRole(
+              payload.user.role
+            ),
+        };
 
 
-      /*
-       * สำคัญ:
-       * ตรวจ SUSPENDED ก่อนเก็บ Token ทุกครั้ง
-       */
-      if (
-        isSuspendedAuthPayload(
+        /*
+         * Private Shop API ต้องใช้ Token
+         *
+         * จึงเก็บ Token ชั่วคราวก่อนตรวจร้าน
+         *
+         * แต่ยังไม่ setUser
+         * ดังนั้นยังไม่ได้เข้า Dashboard
+         */
+        tokenStorage.setTokens(
           payload
-        )
-      ) {
-        tokenStorage.clear();
-
-        setUser(null);
-
-        setError(
-          SUSPENDED_LOGIN_MESSAGE
         );
 
-        throw createSuspendedError();
-      }
+
+        /* =========================
+           CHECK SHOP STATUS
+           ========================= */
+
+        if (
+          normalizedUser.role ===
+          ROLES.SHOP
+        ) {
+          try {
+            await verifyShopAccess();
+
+          } catch (
+          shopError
+          ) {
+            /*
+             * ถ้าร้าน SUSPENDED:
+             *
+             * - ล้าง Token
+             * - ไม่ setUser
+             * - ไม่เข้า /shop
+             * - เปิด Modal หน้า Login
+             */
+            if (
+              shopError?.code ===
+              'ACCOUNT_SUSPENDED'
+            ) {
+              rejectSuspendedSession();
+
+              throw createSuspendedError();
+            }
 
 
-      if (
-        !payload?.accessToken ||
-        !payload?.user
-      ) {
-        throw new Error(
-          'ระบบตอบกลับข้อมูลเข้าสู่ระบบไม่ครบถ้วน'
+            throw shopError;
+          }
+        }
+
+
+        /*
+         * ผ่านทั้ง userStatus
+         * และ shopStatus แล้ว
+         *
+         * จึง Login สำเร็จจริง
+         */
+        setUser(
+          normalizedUser
         );
-      }
+
+        setError('');
 
 
-      /*
-       * ผ่านการตรวจแล้วเท่านั้น
-       * จึงอนุญาตให้สร้าง session
-       */
-      tokenStorage.setTokens(
-        payload
-      );
-
-
-      const normalizedUser = {
-        ...payload.user,
-
-        role:
-          normalizeRole(
-            payload.user.role
-          ),
-      };
-
-
-      setUser(
-        normalizedUser
-      );
-
-      setError('');
-
-
-      return normalizedUser;
-    };
+        return normalizedUser;
+      },
+      [
+        rejectSuspendedSession,
+        verifyShopAccess,
+      ]
+    );
 
 
   /* =========================================================
@@ -401,35 +702,38 @@ export function AuthProvider({
      ========================================================= */
 
   const logout =
-    async () => {
+    useCallback(
+      async () => {
+        const refreshToken =
+          tokenStorage
+            .getRefreshToken();
 
-      const refreshToken =
-        tokenStorage
-          .getRefreshToken();
 
+        try {
+          await authService.logout(
+            refreshToken
+          );
 
-      try {
-        await authService.logout(
-          refreshToken
-        );
+        } catch {
+          /*
+           * Local logout
+           * ต้องสำเร็จแม้ Backend ล่ม
+           */
 
-      } catch {
-        /*
-         * Local logout ต้องสำเร็จ
-         * แม้ Backend ใช้งานไม่ได้
-         */
-      } finally {
-        tokenStorage.clear();
+        } finally {
+          tokenStorage.clear();
 
-        setUser(null);
+          setUser(null);
 
-        setError('');
-      }
-    };
+          setError('');
+        }
+      },
+      []
+    );
 
 
   /* =========================================================
-     CONTEXT
+     CONTEXT VALUE
      ========================================================= */
 
   const value =
@@ -450,6 +754,8 @@ export function AuthProvider({
         user,
         loading,
         error,
+        loginWithGoogle,
+        logout,
         hydrate,
       ]
     );
