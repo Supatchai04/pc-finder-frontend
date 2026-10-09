@@ -403,8 +403,15 @@ export default function ProductFormModal({
     const [error, setError] = useState('');
     const [validationError, setValidationError] = useState('');
     const [masterLoading, setMasterLoading] = useState(false);
-    const [selectedMasterId, setSelectedMasterId] = useState(null);
-    const [originalMasterValues, setOriginalMasterValues] = useState(null);
+    const [, setSelectedMasterId] = useState(null);
+    const [, setOriginalMasterValues] = useState(null);
+    // Refs are updated synchronously, so quick edits and pending API responses
+    // cannot reuse a stale Master ID before React finishes rendering.
+    const selectedMasterIdRef = useRef(null);
+    const originalMasterValuesRef = useRef(null);
+    const hardwareRef = useRef({});
+    const modalSessionRef = useRef(0);
+    const selectionRequestRef = useRef(0);
     const [autocompleteKeyword, setAutocompleteKeyword] = useState('');
     const [autocompleteFieldKey, setAutocompleteFieldKey] = useState('');
     const [autocompleteItems, setAutocompleteItems] = useState([]);
@@ -415,15 +422,73 @@ export default function ProductFormModal({
     const fields = useMemo(() => HARDWARE_FIELDS[category] || [], [category]);
     const hasPrefillMaster = !editItem && prefillMasterId != null && prefillMasterId !== '';
     const choosingCategory = !editItem && !hasPrefillMaster && !category;
+
+    const clearMasterSelection = () => {
+        selectedMasterIdRef.current = null;
+        originalMasterValuesRef.current = null;
+        setSelectedMasterId(null);
+        setOriginalMasterValues(null);
+    };
+    const assignMasterSelection = (masterId, selectedCategory, selectedHardware) => {
+        const snapshot = createMasterSnapshot(selectedCategory, selectedHardware);
+        selectedMasterIdRef.current = masterId ?? null;
+        originalMasterValuesRef.current = snapshot;
+        setSelectedMasterId(masterId ?? null);
+        setOriginalMasterValues(snapshot);
+    };
+    const replaceHardware = (nextHardware) => {
+        hardwareRef.current = nextHardware;
+        setHardware(nextHardware);
+    };
+    const resetModalState = () => {
+        // Prevent delayed detail/autocomplete results from restoring a closed selection.
+        modalSessionRef.current += 1;
+        selectionRequestRef.current += 1;
+        autocompleteRequestRef.current += 1;
+        clearMasterSelection();
+        replaceHardware({});
+        setCategory('');
+        setStoreDetails({ ...INITIAL_STORE_DETAILS });
+        setSaving(false);
+        setMasterLoading(false);
+        setError('');
+        setValidationError('');
+        setAutocompleteKeyword('');
+        setAutocompleteFieldKey('');
+        setAutocompleteItems([]);
+        setAutocompleteLoading(false);
+        setAutocompleteOpen(false);
+        dirtyDetailsRef.current.clear();
+    };
+    const finishAndClose = () => {
+        resetModalState();
+        onHide();
+    };
+    const handleClose = () => {
+        if (saving) return;
+        finishAndClose();
+    };
+    // Also handle the case where the parent hides the modal without calling onHide.
+    useEffect(() => {
+        if (!show) resetModalState();
+    }, [show]);
+    useEffect(() => {
+        // Keep any out-of-band hardware update from retaining a mismatched ID.
+        if (selectedMasterIdRef.current != null &&
+            !isSameMasterValues(category, hardware, originalMasterValuesRef.current)) {
+            clearMasterSelection();
+        }
+    }, [category, hardware]);
     useEffect(() => {
         if (!show) return undefined;
+        const sessionId = ++modalSessionRef.current;
+        ++selectionRequestRef.current;
         let active = true;
         setError('');
         setValidationError('');
         setSaving(false);
         setMasterLoading(false);
-        setSelectedMasterId(null);
-        setOriginalMasterValues(null);
+        clearMasterSelection();
         setAutocompleteKeyword('');
         setAutocompleteFieldKey('');
         setAutocompleteItems([]);
@@ -433,7 +498,7 @@ export default function ProductFormModal({
         if (editItem) {
             const nextCategory = isValidCategory(editItem.category) ? editItem.category : 'CPU';
             setCategory(nextCategory);
-            setHardware(createHardwareState(nextCategory));
+            replaceHardware(createHardwareState(nextCategory));
             setStoreDetails({
                 customTitle: editItem.customTitle || editItem.hardwareName || editItem.displayName || '',
                 price: editItem.price ?? '',
@@ -445,13 +510,13 @@ export default function ProductFormModal({
         }
         if (hasPrefillMaster) {
             setCategory('');
-            setHardware({});
+            replaceHardware({});
             setStoreDetails({ ...INITIAL_STORE_DETAILS });
             setMasterLoading(true);
             (async () => {
                 try {
                     const response = await hardwareService.masterDetail(prefillMasterId);
-                    if (!active) return;
+                    if (!active || sessionId !== modalSessionRef.current) return;
                     const data = response?.data || null;
                     if (!data) throw new Error('ไม่พบข้อมูลฮาร์ดแวร์จาก Master Data');
                     const nextCategory = String(data.category || '').toUpperCase();
@@ -464,17 +529,18 @@ export default function ProductFormModal({
                         : parsedHardware;
                     const nextMasterId = data.masterId ?? data.id ?? prefillMasterId;
                     setCategory(nextCategory);
-                    setHardware(nextHardware);
+                    replaceHardware(nextHardware);
                     setStoreDetails({
                         ...INITIAL_STORE_DETAILS,
                         customTitle: data.displayName || data.name || '',
                     });
-                    setSelectedMasterId(nextMasterId);
-                    setOriginalMasterValues(createMasterSnapshot(nextCategory, nextHardware));
+                    assignMasterSelection(nextMasterId, nextCategory, nextHardware);
                 } catch (err) {
-                    if (active) setError(getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์ไม่สำเร็จ'));
+                    if (active && sessionId === modalSessionRef.current) {
+                        setError(getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์ไม่สำเร็จ'));
+                    }
                 } finally {
-                    if (active) setMasterLoading(false);
+                    if (active && sessionId === modalSessionRef.current) setMasterLoading(false);
                 }
             })();
             return () => {
@@ -483,7 +549,7 @@ export default function ProductFormModal({
         }
         const nextCategory = isValidCategory(defaultCategory) ? defaultCategory : '';
         setCategory(nextCategory);
-        setHardware(nextCategory ? createHardwareState(nextCategory) : {});
+        replaceHardware(nextCategory ? createHardwareState(nextCategory) : {});
         setStoreDetails({ ...INITIAL_STORE_DETAILS });
         return () => {
             active = false;
@@ -521,12 +587,12 @@ export default function ProductFormModal({
         return () => window.clearTimeout(timer);
     }, [show, editItem, category, autocompleteKeyword, masterLoading]);
     const chooseCategory = (nextCategory) => {
+        ++selectionRequestRef.current;
+        clearMasterSelection();
         setCategory(nextCategory);
-        setHardware(createHardwareState(nextCategory));
+        replaceHardware(createHardwareState(nextCategory));
         setValidationError('');
         setError('');
-        setSelectedMasterId(null);
-        setOriginalMasterValues(null);
         setAutocompleteKeyword('');
         setAutocompleteFieldKey('');
         setAutocompleteItems([]);
@@ -534,17 +600,16 @@ export default function ProductFormModal({
     };
     const updateHardware = (key, value, { autocomplete = false } = {}) => {
         setValidationError('');
-        setHardware((previous) => {
-            const nextHardware = { ...previous, [key]: value };
-            if (
-                selectedMasterId != null &&
-                originalMasterValues &&
-                !isSameMasterValues(category, nextHardware, originalMasterValues)
-            ) {
-                setSelectedMasterId(null);
-            }
-            return nextHardware;
-        });
+        // Typing while a suggestion detail is loading invalidates that response.
+        ++selectionRequestRef.current;
+        const nextHardware = { ...hardwareRef.current, [key]: value };
+        if (
+            selectedMasterIdRef.current != null &&
+            !isSameMasterValues(category, nextHardware, originalMasterValuesRef.current)
+        ) {
+            clearMasterSelection();
+        }
+        replaceHardware(nextHardware);
         if (autocomplete && !editItem) {
             setAutocompleteFieldKey(key);
             setAutocompleteKeyword(value);
@@ -552,6 +617,12 @@ export default function ProductFormModal({
         }
     };
     const selectAutocompleteItem = async (item) => {
+        const requestId = ++selectionRequestRef.current;
+        const sessionId = modalSessionRef.current;
+        const selectedCategory = category;
+        const isCurrentRequest = () => requestId === selectionRequestRef.current
+            && sessionId === modalSessionRef.current;
+        clearMasterSelection();
         setAutocompleteLoading(true);
         setError('');
         try {
@@ -570,6 +641,7 @@ export default function ProductFormModal({
                     const detailResponse = typeof hardwareService.shopMasterDetail === 'function'
                         ? await hardwareService.shopMasterDetail(masterId)
                         : await hardwareService.masterDetail(masterId);
+                    if (!isCurrentRequest()) return;
                     if (detailResponse?.data) {
                         sources.push(detailResponse.data);
                         nextHardware = mergeHardwareValues(category, sources);
@@ -584,6 +656,7 @@ export default function ProductFormModal({
                     const legacyResponse = typeof hardwareService.shopDetail === 'function'
                         ? await hardwareService.shopDetail(category, masterId)
                         : await hardwareService.detail(category, masterId);
+                    if (!isCurrentRequest()) return;
                     if (legacyResponse?.data) {
                         sources.push(legacyResponse.data);
                         nextHardware = mergeHardwareValues(category, sources);
@@ -592,6 +665,7 @@ export default function ProductFormModal({
                     // ไม่ block การเลือก suggestion
                 }
             }
+            if (!isCurrentRequest()) return;
             const displayName = item?.displayName
                 || item?.display_name
                 || item?.name
@@ -604,9 +678,8 @@ export default function ProductFormModal({
                     nextHardware = fillRamModelIfMissing(nextHardware, [{ displayName }]);
                 }
             }
-            setHardware(nextHardware);
-            setSelectedMasterId(masterId ?? null);
-            setOriginalMasterValues(createMasterSnapshot(category, nextHardware));
+            replaceHardware(nextHardware);
+            assignMasterSelection(masterId, selectedCategory, nextHardware);
             setStoreDetails((previous) => ({
                 ...previous,
                 customTitle: displayName || previous.customTitle,
@@ -616,9 +689,11 @@ export default function ProductFormModal({
             setAutocompleteItems([]);
             setAutocompleteOpen(false);
         } catch (err) {
-            setError(getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์จากรายการที่เลือกไม่สำเร็จ'));
+            if (isCurrentRequest()) {
+                setError(getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์จากรายการที่เลือกไม่สำเร็จ'));
+            }
         } finally {
-            setAutocompleteLoading(false);
+            if (isCurrentRequest()) setAutocompleteLoading(false);
         }
     };
     const updateStoreDetail = (key, value) => {
@@ -626,10 +701,10 @@ export default function ProductFormModal({
         if (editItem) dirtyDetailsRef.current.add(key);
         setStoreDetails((previous) => ({ ...previous, [key]: value }));
     };
-    const validateCreate = () => {
+    const validateCreate = (currentMasterId, currentHardware) => {
         if (
-            selectedMasterId == null &&
-            fields.some((field) => field.required && !cleanValue(hardware[field.key]))
+            currentMasterId == null &&
+            fields.some((field) => field.required && !cleanValue(currentHardware[field.key]))
         ) {
             setValidationError('* กรุณากรอกข้อมูลฮาร์ดแวร์ให้ครบ');
             return false;
@@ -656,7 +731,7 @@ export default function ProductFormModal({
         if (editItem) {
             const dirty = dirtyDetailsRef.current;
             if (!dirty.size) {
-                onHide();
+                finishAndClose();
                 return;
             }
             setSaving(true);
@@ -669,7 +744,7 @@ export default function ProductFormModal({
                 if (dirty.has('productStatus')) payload.productStatus = storeDetails.productStatus;
                 await shopService.updateProduct(editItem.shopProductId, payload);
                 onSaved?.();
-                onHide();
+                finishAndClose();
             } catch (err) {
                 setError(getApiErrorMessage(err, 'อัปเดตสินค้าไม่สำเร็จ'));
             } finally {
@@ -677,18 +752,24 @@ export default function ProductFormModal({
             }
             return;
         }
-        if (!validateCreate()) return;
+        // Read synchronously updated refs, not a potentially stale render closure.
+        const currentHardware = hardwareRef.current;
+        const currentMasterId = selectedMasterIdRef.current != null
+            && isSameMasterValues(category, currentHardware, originalMasterValuesRef.current)
+            ? selectedMasterIdRef.current
+            : null;
+        if (!validateCreate(currentMasterId, currentHardware)) return;
         setSaving(true);
         try {
             let hardwarePayload;
-            if (selectedMasterId != null) {
-                const numericMasterId = Number(selectedMasterId);
+            if (currentMasterId != null) {
+                const numericMasterId = Number(currentMasterId);
                 hardwarePayload = {
-                    productModelId: Number.isFinite(numericMasterId) ? numericMasterId : selectedMasterId,
+                    productModelId: Number.isFinite(numericMasterId) ? numericMasterId : currentMasterId,
                 };
             } else {
-                const displayName = createDisplayName(category, hardware);
-                const backendHardware = createBackendHardware(hardware);
+                const displayName = createDisplayName(category, currentHardware);
+                const backendHardware = createBackendHardware(currentHardware);
                 backendHardware.hardware_key = createHardwareKey(displayName);
                 backendHardware.display_name = displayName;
                 hardwarePayload = backendHardware;
@@ -705,7 +786,7 @@ export default function ProductFormModal({
                 },
             });
             onSaved?.();
-            onHide();
+            finishAndClose();
         } catch (err) {
             setError(getApiErrorMessage(err, 'เพิ่มสินค้าไม่สำเร็จ'));
         } finally {
@@ -821,7 +902,7 @@ export default function ProductFormModal({
     return (
         <Modal
             show={show}
-            onHide={onHide}
+            onHide={handleClose}
             centered
             size="lg"
             backdrop="static"
@@ -976,7 +1057,7 @@ export default function ProductFormModal({
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="light" onClick={onHide} disabled={saving}>
+                    <Button variant="light" onClick={handleClose} disabled={saving}>
                         ยกเลิก
                     </Button>
                     {!choosingCategory && !masterLoading && category && (
