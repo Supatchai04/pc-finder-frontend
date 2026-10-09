@@ -962,13 +962,32 @@ export default function AdminStoresPage() {
 
 
 
-  const location =
-
-    detail?.location ||
-
-    shop?.location ||
-
-    {};
+  // API อาจส่งพิกัดอยู่ใน location หรืออยู่ที่ระดับข้อมูลร้านโดยตรง
+  // อ่านค่าทั้งสองรูปแบบ แต่ไม่แสดงตัวเลข Latitude/Longitude บนหน้า Admin
+  const locationData = detail?.location || shop?.location || {};
+  const location = {
+    ...locationData,
+    latitude:
+      locationData.latitude ??
+      shop?.location?.latitude ??
+      detail?.latitude ??
+      detail?.shopLatitude ??
+      shop?.latitude ??
+      shop?.shopLatitude ??
+      selectedStore?.location?.latitude ??
+      selectedStore?.latitude ??
+      null,
+    longitude:
+      locationData.longitude ??
+      shop?.location?.longitude ??
+      detail?.longitude ??
+      detail?.shopLongitude ??
+      shop?.longitude ??
+      shop?.shopLongitude ??
+      selectedStore?.location?.longitude ??
+      selectedStore?.longitude ??
+      null,
+  };
 
 
 
@@ -1169,25 +1188,18 @@ export default function AdminStoresPage() {
 
 
   const fullAddress =
-
     [
-
-      location.addressText,
-
-      location.subDistrict,
-
-      location.district,
-
-      location.province,
-
-      location.zipCode,
-
+      location.addressText ?? shop?.addressText,
+      location.subDistrict ?? shop?.subDistrict,
+      location.district ?? shop?.district,
+      location.province ?? shop?.province,
+      location.zipCode ?? shop?.zipCode,
     ]
-
       .filter(Boolean)
-
       .join(' ') ||
-
+    shop?.fullAddress ||
+    detail?.fullAddress ||
+    selectedStore?.fullAddress ||
     '-';
 
 
@@ -2910,45 +2922,11 @@ export default function AdminStoresPage() {
 
 
 
-                        <div className="admin-store-coordinate">
-
-                          <span>
-
-                            Latitude
-
-                          </span>
-
-
-
-                          <strong>
-
-                            {location.latitude}
-
-                          </strong>
-
-                        </div>
 
 
 
 
 
-                        <div className="admin-store-coordinate">
-
-                          <span>
-
-                            Longitude
-
-                          </span>
-
-
-
-                          <strong>
-
-                            {location.longitude}
-
-                          </strong>
-
-                        </div>
 
 
 

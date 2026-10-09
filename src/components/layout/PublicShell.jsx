@@ -1,8 +1,6 @@
 import {
-  FolderHeart,
   LogIn,
   LogOut,
-  Search,
   UserRound,
 } from 'lucide-react';
 
@@ -40,42 +38,12 @@ export default function PublicShell() {
   return (
     <div className="public-app">
 
-      <header className="public-header">
+      <header className="public-header" style={{ gridTemplateColumns: '1fr auto' }}>
 
         <Brand />
 
 
-        <nav
-          className="public-nav"
-          aria-label="เมนูหลัก"
-        >
-          <NavLink
-            to="/"
-            end
-          >
-            หน้าแรก
-          </NavLink>
 
-
-          <NavLink to="/hardware">
-            <Search size={14} />
-            เลือกฮาร์ดแวร์
-          </NavLink>
-
-
-          <NavLink to="/compare">
-            เปรียบเทียบร้านค้า
-          </NavLink>
-
-
-          {user?.role === 'USER' && (
-            <NavLink to="/favorites">
-              <FolderHeart size={14} />
-              รายการที่บันทึก
-            </NavLink>
-          )}
-
-        </nav>
 
 
         <div className="public-header-actions">

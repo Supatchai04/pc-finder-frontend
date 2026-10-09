@@ -4789,6 +4789,8 @@ textarea.form-control {
 
 .compare-store-card {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   padding: 18px;
   border: 1px solid #e1e8f0;
   border-radius: 14px;
@@ -4979,9 +4981,17 @@ textarea.form-control {
 }
 
 
+/* ช่องว่างทดแทนสินค้าที่ไม่มี: จองความสูงของแถวโดยไม่แสดงสินค้า */
+.compare-product-empty-slot {
+  height: 62px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ---------- TOTAL + ACTIONS ---------- */
 
 .compare-store-total {
+  margin-top: auto;
   min-height: 52px;
   padding: 13px 2px 10px;
   display: flex;
@@ -6961,5 +6971,80 @@ body,
   .favorites-summary-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Category-aware master hardware filters */
+.hardware-finder-toolbar {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.hardware-finder-filters {
+  flex: 1 1 520px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.hardware-finder-filters label {
+  flex: 1 1 118px;
+  min-width: 108px;
+  max-width: 176px;
+}
+
+.hardware-finder-filters select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hardware-filters-clear {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 39px;
+  padding: 0 10px;
+  border: 1px solid #d8e7f9;
+  border-radius: 8px;
+  background: #f7fbff;
+  color: #1769c9;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hardware-filters-clear:hover {
+  border-color: #a5cbed;
+  background: #ecf5ff;
+}
+
+.hardware-finder-toolbar .hardware-finder-search {
+  flex: 1 1 250px;
+  width: min(320px, 100%);
+  min-width: 240px;
+}
+
+@media (max-width: 1040px) {
+  .hardware-finder-toolbar .hardware-finder-search {
+    width: 100%;
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .hardware-finder-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-basis: 100%;
+  }
+  .hardware-finder-filters label {
+    max-width: none;
+    min-width: 0;
+  }
+  .hardware-filters-clear {
+    width: 100%;
   }
 }

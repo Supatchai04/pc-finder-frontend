@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw, Search, SlidersHorizontal } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ import { hardwareService } from '../../services/hardwareService';
 import { dropdownService } from '../../services/dropdownService';
 import { getApiErrorMessage } from '../../utils/api';
 import { buildStorage } from '../../utils/buildStorage';
+import { HARDWARE_FILTERS, optionsForFilter, matchesHardwareFilters, hardwareFilterLabel, fetchCompleteHardwareCatalog } from '../../utils/hardwareFilters';
 
 const fallbackCategories = [
   { value: 'CPU', label: 'ซีพียู (CPU)' },
@@ -148,17 +149,19 @@ export default function HardwareFinderPage() {
     fallbackCategoryValues.includes(initialCategory) ? initialCategory : 'VGA'
   );
 
-  const [brand, setBrand] = useState('ทั้งหมด');
+  const [filters, setFilters] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const latestCatalogRequest = useRef(0);
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
-  const [selected, setSelected] = useState(() => buildStorage.getSelected());
+  const [selected, setSelected] = useState(() =>
+    Object.fromEntries(
+      Object.entries(buildStorage.getSelected()).filter(
+        ([key]) => String(key).trim().toUpperCase() !== 'CASE'
+      )
+    )
+  );
   const [rows, setRows] = useState([]);
-  const [meta, setMeta] = useState({
-    page: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: 20,
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -176,7 +179,11 @@ export default function HardwareFinderPage() {
             : [];
 
         const validCategories = data
-          .filter((item) => item?.value && item?.label)
+          .filter((item) =>
+            item?.value &&
+            item?.label &&
+            String(item.value).trim().toUpperCase() !== 'CASE'
+          )
           .map((item) => ({
             ...item,
             value: String(item.value).toUpperCase(),
@@ -214,7 +221,8 @@ export default function HardwareFinderPage() {
   const setCategory = (nextCategory) => {
     const normalizedCategory = String(nextCategory).toUpperCase();
 
-    setBrand('ทั้งหมด');
+    setFilters({});
+    setCurrentPage(1);
     setSearch('');
     setAppliedSearch('');
     setSuggestions([]);
@@ -225,40 +233,29 @@ export default function HardwareFinderPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const load = async (page = 1) => {
+  useEffect(() => {
+    let active = true;
+    const request = ++latestCatalogRequest.current;
     setLoading(true);
     setError('');
+    setRows([]);
+    setCurrentPage(1);
 
-    try {
-      const response = await hardwareService.list(category, {
-        page,
-        limit: 20,
-        ...(appliedSearch ? { search: appliedSearch } : {}),
+    fetchCompleteHardwareCatalog(hardwareService.list, category, appliedSearch, () => active && request === latestCatalogRequest.current)
+      .then((data) => {
+        if (active && request === latestCatalogRequest.current) setRows(data);
+      })
+      .catch((err) => {
+        if (active && request === latestCatalogRequest.current) {
+          setRows([]);
+          setError(getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์ไม่สำเร็จ'));
+        }
+      })
+      .finally(() => {
+        if (active && request === latestCatalogRequest.current) setLoading(false);
       });
 
-      const data = Array.isArray(response.data) ? response.data : [];
-
-      setRows(data);
-      setMeta(
-        response.meta || {
-          page,
-          totalPages: 1,
-          totalItems: data.length,
-          limit: 20,
-        }
-      );
-    } catch (err) {
-      setRows([]);
-      setError(
-        getApiErrorMessage(err, 'โหลดข้อมูลฮาร์ดแวร์ไม่สำเร็จ')
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load(1);
+    return () => { active = false; };
   }, [category, appliedSearch]);
 
   useEffect(() => {
@@ -289,21 +286,32 @@ export default function HardwareFinderPage() {
     return () => clearTimeout(timer);
   }, [category, search]);
 
-  const brands = useMemo(
-    () => [
-      'ทั้งหมด',
-      ...new Set(rows.map((item) => item.brand).filter(Boolean)),
-    ],
-    [rows]
-  );
+  const categoryFields = HARDWARE_FILTERS[category] || HARDWARE_FILTERS.VGA;
+  const filterOptions = useMemo(() => categoryFields.map((_, index) =>
+    optionsForFilter(rows, category, categoryFields, index, filters)), [rows, category, filters]);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter(
-        (item) => brand === 'ทั้งหมด' || item.brand === brand
-      ),
-    [rows, brand]
-  );
+  const setFilter = (key, value) => {
+    const index = categoryFields.findIndex((field) => field.key === key);
+    setFilters((previous) => {
+      const next = { ...previous, [key]: value };
+      // Later options depend on earlier ones: discard invalid dependent values.
+      categoryFields.slice(index + 1).forEach((field) => { delete next[field.key]; });
+      return next;
+    });
+    setCurrentPage(1);
+  };
+
+  const filteredRows = useMemo(() => rows.filter((item) =>
+    matchesHardwareFilters(item, category, filters)), [rows, category, filters]);
+
+  const meta = {
+    page: currentPage,
+    totalPages: Math.max(1, Math.ceil(filteredRows.length / 20)),
+    totalItems: filteredRows.length,
+    limit: 20,
+  };
+  const pageRows = filteredRows.slice((currentPage - 1) * 20, currentPage * 20);
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   const backendCategoryLabel =
     categoryOptions.find(
@@ -388,6 +396,8 @@ export default function HardwareFinderPage() {
 
   const submitSearch = () => {
     setAppliedSearch(search.trim());
+    setFilters({});
+    setCurrentPage(1);
     setSuggestions([]);
   };
 
@@ -395,6 +405,8 @@ export default function HardwareFinderPage() {
     const name = getDisplayName(item);
     setSearch(name);
     setAppliedSearch(name);
+    setFilters({});
+    setCurrentPage(1);
     setSuggestions([]);
   };
 
@@ -421,30 +433,35 @@ export default function HardwareFinderPage() {
           <section className="hardware-finder-main-card">
             <div className="hardware-finder-toolbar">
               <div className="hardware-finder-filters">
-                <label>
-                  <span>Brand</span>
-                  <select
-                    value={brand}
-                    onChange={(event) => setBrand(event.target.value)}
-                  >
-                    {brands.map((brandName) => (
-                      <option key={brandName} value={brandName}>
-                        {brandName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  <span>Series</span>
-                  <select
-                    disabled
-                    title="ตัวกรอง Series ยังไม่เปิดใช้งาน"
-                    defaultValue="ทั้งหมด"
-                  >
-                    <option value="ทั้งหมด">ทั้งหมด</option>
-                  </select>
-                </label>
+                {categoryFields.map((field, index) => {
+                  const options = filterOptions[index];
+                  return (
+                    <label key={field.key}>
+                      <span>{field.label}</span>
+                      <select
+                        value={filters[field.key] || ''}
+                        onChange={(event) => setFilter(field.key, event.target.value)}
+                        disabled={loading || !options.length}
+                        aria-label={`กรองตาม ${field.label}`}
+                      >
+                        <option value="">ทั้งหมด</option>
+                        {options.map((option) => (
+                          <option key={option} value={option}>
+                            {hardwareFilterLabel(field.key, option)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                })}
+                {activeFilterCount > 0 && (
+                  <button type="button" className="hardware-filters-clear" onClick={() => {
+                    setFilters({});
+                    setCurrentPage(1);
+                  }}>
+                    <RotateCcw size={14} /> ล้างตัวกรอง
+                  </button>
+                )}
               </div>
 
               <div className="hardware-finder-search autocomplete-wrap">
@@ -529,14 +546,13 @@ export default function HardwareFinderPage() {
               <h2>
                 {currentCategoryLabel}{' '}
                 <span>
-                  ({meta.totalItems ?? filteredRows.length} รายการ)
+                  ({filteredRows.length} รายการ)
                 </span>
               </h2>
 
               <div className="hardware-table-filter-note">
                 <SlidersHorizontal size={15} />
-                <span>Brand filter</span>
-                <small>Series filter ยังไม่เปิดใช้งาน</small>
+                <span>{activeFilterCount > 0 ? `กำลังกรอง ${activeFilterCount} เงื่อนไข` : 'แสดงสินค้าทั้งหมดในหมวด'}</span>
               </div>
             </div>
 
@@ -558,7 +574,7 @@ export default function HardwareFinderPage() {
                     </thead>
 
                     <tbody>
-                      {filteredRows.map((item, index) => {
+                      {pageRows.map((item, index) => {
                         const id = getId(item);
                         const specs = getItemSpecs(item, category);
                         const selectedRow = isSelected(item);
@@ -614,7 +630,7 @@ export default function HardwareFinderPage() {
 
                   {!filteredRows.length && (
                     <div className="empty-inline">
-                      {error || 'ไม่พบรายการที่ตรงกับการค้นหา'}
+                      {error || 'ไม่พบรายการที่ตรงกับตัวกรองหรือคำค้นหา'}
                     </div>
                   )}
                 </>
@@ -625,11 +641,11 @@ export default function HardwareFinderPage() {
               <PaginationBar
                 page={meta.page || 1}
                 pages={meta.totalPages || 1}
-                onChange={load}
+                onChange={setCurrentPage}
               />
 
               <div className="hardware-per-page">
-                แสดงสูงสุด {meta.limit || 20} รายการ
+                แสดงสูงสุด {meta.limit} รายการต่อหน้า
               </div>
             </div>
           </section>

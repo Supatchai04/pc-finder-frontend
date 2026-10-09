@@ -11,7 +11,6 @@ import {
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -24,8 +23,6 @@ import {
   Modal,
 } from 'react-bootstrap';
 
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 import { useAuth } from '../../auth/AuthContext';
 
@@ -71,77 +68,11 @@ const getNumberOrNull = (value) => {
 };
 
 
-const STORE_MARKER_ICON =
-  L.divIcon({
-    className: '',
-
-    iconSize: [
-      36,
-      46,
-    ],
-
-    iconAnchor: [
-      18,
-      44,
-    ],
-
-    html: `
-      <div
-        style="
-          width: 34px;
-          height: 34px;
-          position: relative;
-
-          border-radius:
-            50% 50% 50% 0;
-
-          background:
-            #ef3f37;
-
-          border:
-            3px solid #ffffff;
-
-          box-shadow:
-            0 3px 10px
-            rgba(30, 45, 65, 0.35);
-
-          transform:
-            rotate(-45deg);
-        "
-      >
-        <div
-          style="
-            position: absolute;
-
-            width: 10px;
-            height: 10px;
-
-            top: 9px;
-            left: 9px;
-
-            border-radius: 50%;
-
-            background:
-              #ffffff;
-          "
-        ></div>
-      </div>
-    `,
-  });
-
-
 function StorePreviewMap({
   latitude,
   longitude,
   shopName,
 }) {
-  const mapElementRef =
-    useRef(null);
-
-  const mapRef =
-    useRef(null);
-
-
   const lat =
     getNumberOrNull(
       latitude
@@ -151,103 +82,6 @@ function StorePreviewMap({
     getNumberOrNull(
       longitude
     );
-
-
-  useEffect(() => {
-    if (
-      lat === null ||
-      lng === null ||
-      !mapElementRef.current
-    ) {
-      return undefined;
-    }
-
-
-    if (mapRef.current) {
-      mapRef.current.remove();
-      mapRef.current = null;
-    }
-
-
-    const map =
-      L.map(
-        mapElementRef.current,
-        {
-          zoomControl: true,
-          scrollWheelZoom: true,
-        }
-      );
-
-
-    map.setView(
-      [
-        lat,
-        lng,
-      ],
-      16
-    );
-
-
-    L.tileLayer(
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom: 19,
-
-        attribution:
-          '&copy; OpenStreetMap contributors',
-      }
-    ).addTo(map);
-
-
-    const marker =
-      L.marker(
-        [
-          lat,
-          lng,
-        ],
-        {
-          icon:
-            STORE_MARKER_ICON,
-        }
-      ).addTo(map);
-
-
-    if (shopName) {
-      marker.bindPopup(
-        shopName
-      );
-    }
-
-
-    mapRef.current =
-      map;
-
-
-    const timer =
-      window.setTimeout(
-        () => {
-          map.invalidateSize();
-        },
-        250
-      );
-
-
-    return () => {
-      window.clearTimeout(
-        timer
-      );
-
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-
-  }, [
-    lat,
-    lng,
-    shopName,
-  ]);
 
 
   if (
@@ -270,10 +104,25 @@ function StorePreviewMap({
   }
 
 
+  const googleMapEmbedUrl =
+    `https://www.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
+
+
   return (
-    <div
-      ref={mapElementRef}
+    <iframe
+      title={
+        `ตำแหน่งร้านค้า ${shopName || ''}`
+      }
+      src={
+        googleMapEmbedUrl
+      }
       className="store-modal-map"
+      style={{
+        border: 0,
+      }}
+      loading="lazy"
+      allowFullScreen
+      referrerPolicy="no-referrer-when-downgrade"
     />
   );
 }
@@ -398,11 +247,11 @@ export default function StoreProductsPage() {
 
           store
             ? Promise.resolve({
-                data: store,
-              })
+              data: store,
+            })
             : storeService.profile(
-                shopId
-              ),
+              shopId
+            ),
 
           storeService.products(
             shopId,
@@ -412,8 +261,8 @@ export default function StoreProductsPage() {
 
               ...(category
                 ? {
-                    category,
-                  }
+                  category,
+                }
                 : {}),
             }
           ),
@@ -676,7 +525,7 @@ export default function StoreProductsPage() {
             Number(id)
           ) &&
           err?.response?.status ===
-            409
+          409
         ) {
           setFavoriteIds(
             (previous) =>
@@ -739,19 +588,19 @@ export default function StoreProductsPage() {
     store?.fullAddress ||
     [
       store?.addressText ??
-        location?.addressText,
+      location?.addressText,
 
       store?.subDistrict ??
-        location?.subDistrict,
+      location?.subDistrict,
 
       store?.district ??
-        location?.district,
+      location?.district,
 
       store?.province ??
-        location?.province,
+      location?.province,
 
       store?.zipCode ??
-        location?.zipCode,
+      location?.zipCode,
     ]
       .filter(Boolean)
       .join(' ');
@@ -1000,8 +849,8 @@ export default function StoreProductsPage() {
                           <td>
                             {item.price != null
                               ? `${Number(
-                                  item.price
-                                ).toLocaleString()}.-`
+                                item.price
+                              ).toLocaleString()}.-`
                               : '-'}
                           </td>
 
@@ -1031,10 +880,9 @@ export default function StoreProductsPage() {
                               <button
                                 type="button"
                                 className={
-                                  `icon-only ${
-                                    isFavorite
-                                      ? 'favorite-active'
-                                      : ''
+                                  `icon-only ${isFavorite
+                                    ? 'favorite-active'
+                                    : ''
                                   }`
                                 }
                                 disabled={
@@ -1335,7 +1183,7 @@ export default function StoreProductsPage() {
                     <a
                       className="outline-btn compact public-store-map-link"
                       href={
-                        `https://www.openstreetmap.org/?mlat=${modalLatitude}&mlon=${modalLongitude}#map=17/${modalLatitude}/${modalLongitude}`
+                        `https://www.google.com/maps/search/?api=1&query=${modalLatitude},${modalLongitude}`
                       }
                       target="_blank"
                       rel="noreferrer"
@@ -1345,7 +1193,7 @@ export default function StoreProductsPage() {
                         size={15}
                       />
 
-                      เปิด OpenStreetMap
+                      เปิด Google Maps
 
                     </a>
 
