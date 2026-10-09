@@ -71,6 +71,7 @@ const buildMockAutocompleteItem = (item, category) => {
   if (category === 'RAM') {
     result.rams = {
       masterId,
+      model: pick(item?.model, specs?.model),
       ramType: pick(item?.ramType, item?.ram_type, specs?.ramType, specs?.ram_type),
       capacityGB: pick(item?.capacityGB, item?.capacity_gb, specs?.capacityGB, specs?.capacity_gb),
       busSpeed: pick(item?.busSpeed, item?.bus_speed, specs?.busSpeed, specs?.bus_speed),

@@ -1,4 +1,4 @@
-import { ArrowRight, CircuitBoard, Cpu, Fan, HardDrive, MapPin, MemoryStick, Monitor, Search, Store, Zap } from 'lucide-react';
+import { ArrowRight, CircuitBoard, Cpu, HardDrive, MapPin, MemoryStick, Monitor, Search, Store, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import CustomerSidebar from '../../components/navigation/CustomerSidebar';
 
@@ -9,7 +9,6 @@ const categories = [
   { key: 'RAM', icon: MemoryStick, label: 'Memory', description: 'แรม' },
   { key: 'STORAGE', icon: HardDrive, label: 'Storage', description: 'อุปกรณ์จัดเก็บข้อมูล' },
   { key: 'PSU', icon: Zap, label: 'Power Supply', description: 'เพาเวอร์ซัพพลาย' },
-  { key: 'COOLER', icon: Fan, label: 'CPU Cooler', description: 'ชุดระบายความร้อน' },
 ];
 
 const steps = [
@@ -61,7 +60,7 @@ const pageStyles = `
 .pcf-home .pcf-step-detail { color: #748397; font-size: 13px; line-height: 1.85; margin: 0; }
 .pcf-home .pcf-step-tag { display: inline-flex; align-items: center; gap: 7px; color: var(--step-color); background: var(--step-soft); border-radius: 7px; padding: 6px 10px; font-size: 11px; margin-top: 22px; }
 .pcf-home a:focus-visible { outline: 3px solid #1673e6; outline-offset: 4px; }
-@media (min-width: 1450px) { .pcf-home .pcf-category-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); } .pcf-home .pcf-category { flex-direction: column; align-items: flex-start; } }
+@media (min-width: 1450px) { .pcf-home .pcf-category-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } .pcf-home .pcf-category { flex-direction: column; align-items: flex-start; } }
 @media (max-width: 1000px) { .pcf-home .pcf-hero { grid-template-columns: 1fr; } .pcf-home .pcf-hero-art { display: none; } .pcf-home .pcf-category-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .pcf-home .pcf-home-main { padding: 20px 14px 32px; } .pcf-home .pcf-hero { padding: 26px 22px; border-radius: 14px; } .pcf-home .pcf-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; } .pcf-home .pcf-category { padding: 14px 10px; gap: 8px; } .pcf-home .pcf-category-icon { width: 32px; height: 36px; } .pcf-home .pcf-section-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .pcf-home .pcf-steps ol { grid-template-columns: 1fr; gap: 18px; } }
 `;

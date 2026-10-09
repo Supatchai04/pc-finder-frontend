@@ -717,6 +717,7 @@ export const mockApi = {
 
       if (category === 'RAM') {
         data.rams = {
+          model: item.model || item.specs?.model || '',
           ramType: item.ramType || item.specs?.ramType || '',
           capacityGB:
             item.capacityGB || item.specs?.capacityGB || '',

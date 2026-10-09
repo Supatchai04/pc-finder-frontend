@@ -2,7 +2,6 @@ import {
   Check,
   CircuitBoard,
   Cpu,
-  Fan,
   HardDrive,
   MemoryStick,
   Monitor,
@@ -36,10 +35,6 @@ const fallbackCategories = [
     value: 'PSU',
     label: 'Power Supply',
   },
-  {
-    value: 'COOLER',
-    label: 'CPU Cooler',
-  },
 ];
 
 
@@ -50,7 +45,6 @@ const categoryIcons = {
   RAM: MemoryStick,
   STORAGE: HardDrive,
   PSU: Zap,
-  COOLER: Fan,
 };
 
 
@@ -61,11 +55,13 @@ export default function HardwareSidebar({
   onSelect,
   onCompare,
 }) {
-  const categoryList =
-    Array.isArray(categories) &&
-    categories.length
+  const categoryList = (
+    Array.isArray(categories) && categories.length
       ? categories
-      : fallbackCategories;
+      : fallbackCategories
+  ).filter((item) =>
+    String(item?.value || item?.key || '').trim().toUpperCase() !== 'COOLER'
+  );
 
 
   const totalSelected =

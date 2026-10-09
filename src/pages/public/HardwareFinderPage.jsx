@@ -20,7 +20,6 @@ const fallbackCategories = [
   { value: 'RAM', label: 'แรม (RAM)' },
   { value: 'STORAGE', label: 'อุปกรณ์จัดเก็บข้อมูล (Storage)' },
   { value: 'PSU', label: 'เพาเวอร์ซัพพลาย (PSU)' },
-  { value: 'COOLER', label: 'ชุดระบายความร้อน (Cooler)' },
 ];
 
 const fallbackCategoryValues = fallbackCategories.map((item) => item.value);
@@ -182,7 +181,7 @@ export default function HardwareFinderPage() {
           .filter((item) =>
             item?.value &&
             item?.label &&
-            String(item.value).trim().toUpperCase() !== 'CASE'
+            !['CASE', 'COOLER'].includes(String(item.value).trim().toUpperCase())
           )
           .map((item) => ({
             ...item,

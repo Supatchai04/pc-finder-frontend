@@ -111,9 +111,10 @@ const HARDWARE_FIELDS = {
     ],
     RAM: [
         { key: 'brand', label: 'แบรนด์', required: true, md: 6, placeholder: 'กรอกแบรนด์' },
-        { key: 'ramType', label: 'ประเภท RAM', required: true, md: 6, options: ['DDR4', 'DDR5'], placeholder: 'เลือกประเภท RAM' },
-        { key: 'capacityGB', label: 'ความจุ (GB)', required: true, md: 6, type: 'number', placeholder: 'เช่น 16, 32, 64' },
-        { key: 'busSpeed', label: 'Bus Speed (MHz)', required: true, md: 6, type: 'number', placeholder: 'เช่น 3200, 5600, 6000' },
+        { key: 'model', label: 'Model', required: true, md: 6, placeholder: 'เช่น FURY Beast, Vengeance RGB' },
+        { key: 'ramType', label: 'ประเภท RAM', required: true, md: 4, options: ['DDR4', 'DDR5'], placeholder: 'เลือกประเภท RAM' },
+        { key: 'capacityGB', label: 'ความจุ (GB)', required: true, md: 4, type: 'number', placeholder: 'เช่น 16, 32, 64' },
+        { key: 'busSpeed', label: 'Bus Speed (MHz)', required: true, md: 4, type: 'number', placeholder: 'เช่น 3200, 5600, 6000' },
     ],
     STORAGE: [
         { key: 'brand', label: 'แบรนด์', required: true, md: 4, placeholder: 'กรอกแบรนด์' },
@@ -223,6 +224,43 @@ const numericOnly = (value) => {
     const match = String(value).match(/\d+(?:\.\d+)?/);
     return match ? match[0] : value;
 };
+// รายการ RAM รุ่นเก่าบางรายการไม่มี model แต่มีชื่อรุ่นอยู่ใน displayName
+// เช่น "Corsair Vengeance DDR5 32GB (16GBx2) 5600MHz" -> "Vengeance"
+const inferRamModelFromName = (displayName, brand) => {
+    const name = cleanValue(displayName);
+    const brandName = cleanValue(brand);
+    if (!name || !brandName) return '';
+
+    // ต้องขึ้นต้นด้วยแบรนด์จริง ๆ เพื่อไม่ดึงชื่อสินค้าที่ไม่เกี่ยวข้องมาใส่ Model
+    const escapedBrand = brandName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const brandPrefix = new RegExp(`^${escapedBrand}(?:\\s+|\\s*[-:/]\\s*)`, 'i');
+    if (!brandPrefix.test(name)) return '';
+
+    const withoutBrand = name.replace(brandPrefix, '').trim();
+    // ตัดส่วนสเปก (DDR, ความจุ, MHz) ออก โดยเก็บชื่อซีรีส์เช่น "Trident Z5" ไว้
+    const specMatch = withoutBrand.match(/(?:^|[\s(])(?:(?:LP)?DDR[345]|PC[345][-_]?\d*|\d+(?:\.\d+)?\s*(?:GB|TB|MB)\b|\d{3,5}\s*(?:MHz|MT\/s)\b)/i);
+    const model = (specMatch ? withoutBrand.slice(0, specMatch.index) : withoutBrand)
+        .replace(/[\s,;:/()\-]+$/g, '')
+        .trim();
+    return model && /[a-zA-Z]/.test(model) ? model : '';
+};
+// กรณี Backend ไม่ส่ง model แยกไว้ ให้ใช้ชื่อสินค้า Master Data เป็นทางเลือกสุดท้าย
+// แต่ห้ามทับค่ารุ่นที่ API ส่งมา และห้ามนำชื่อ DDR/ความจุ/Bus Speed ไปใช้เป็น Model
+const fillRamModelIfMissing = (hardware, sources) => {
+    if (cleanValue(hardware.model)) return hardware;
+    for (const source of sources) {
+        const details = getDetailSources(source, 'RAM');
+        const seriesName = getFirstValue(details, ['series', 'serie', 'productSeries']);
+        if (typeof seriesName === 'string' && cleanValue(seriesName)
+            && !/^(?:LP)?DDR[345]$/i.test(seriesName.trim())) {
+            return { ...hardware, model: seriesName.trim() };
+        }
+        const displayName = getFirstValue(details, ['displayName', 'display_name', 'name', 'hardwareName']);
+        const inferred = inferRamModelFromName(displayName, hardware.brand);
+        if (inferred) return { ...hardware, model: inferred };
+    }
+    return hardware;
+};
 const createHardwareFromMaster = (data, category) => {
     const result = createHardwareState(category);
     const sources = getDetailSources(data, category);
@@ -247,9 +285,10 @@ const createHardwareFromMaster = (data, category) => {
             if (key === 'vramSize') return numericOnly(getFirstValue(sources, ['vramSize', 'vram_size']));
         }
         if (category === 'RAM') {
-            if (key === 'ramType') return getFirstValue(sources, ['ramType', 'ram_type']);
+            if (key === 'model') return getFirstValue(sources, ['model', 'modelName', 'ramModel', 'ramModelName', 'modelNumber']);
+            if (key === 'ramType') return getFirstValue(sources, ['ramType', 'ram_type', 'memoryType', 'ddrType']);
             if (key === 'capacityGB') return numericOnly(getFirstValue(sources, ['capacityGB', 'capacity_gb']));
-            if (key === 'busSpeed') return numericOnly(getFirstValue(sources, ['busSpeed', 'bus_speed']));
+            if (key === 'busSpeed') return numericOnly(getFirstValue(sources, ['busSpeed', 'bus_speed', 'speedMHz', 'frequencyMHz']));
         }
         if (category === 'STORAGE') {
             if (key === 'model') return getFirstValue(sources, ['model']);
@@ -306,7 +345,7 @@ const createDisplayName = (category, hardware) => {
     if (category === 'CPU') return [hardware.brand, hardware.family, hardware.processorClass].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'MAINBOARD') return [hardware.brand, hardware.serie, hardware.chipset].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'VGA') return [hardware.brand, hardware.series, hardware.chipset, hardware.vramSize ? `${cleanValue(hardware.vramSize)}GB` : ''].map(cleanValue).filter(Boolean).join(' ');
-    if (category === 'RAM') return [hardware.brand, hardware.ramType, hardware.capacityGB ? `${cleanValue(hardware.capacityGB)}GB` : '', hardware.busSpeed ? `${cleanValue(hardware.busSpeed)}MHz` : ''].map(cleanValue).filter(Boolean).join(' ');
+    if (category === 'RAM') return [hardware.brand, hardware.model, hardware.ramType, hardware.capacityGB ? `${cleanValue(hardware.capacityGB)}GB` : '', hardware.busSpeed ? `${cleanValue(hardware.busSpeed)}MHz` : ''].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'STORAGE') return [hardware.brand, hardware.model, hardware.capacityGB ? `${cleanValue(hardware.capacityGB)}GB` : '', hardware.interfaceType].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'PSU') return [hardware.brand, hardware.model, hardware.watt ? `${cleanValue(hardware.watt)}W` : '', hardware.standard80Plus].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'COOLER') return [hardware.brand, hardware.model].map(cleanValue).filter(Boolean).join(' ');
@@ -341,7 +380,7 @@ const getSuggestionMeta = (item, category) => {
     if (category === 'CPU') return [hardware.family, hardware.processorClass, hardware.socket].filter(Boolean).join(' • ');
     if (category === 'MAINBOARD') return [hardware.serie, hardware.socket, hardware.chipset].filter(Boolean).join(' • ');
     if (category === 'VGA') return [hardware.series, hardware.chipset, hardware.vramSize && `${hardware.vramSize}GB`].filter(Boolean).join(' • ');
-    if (category === 'RAM') return [hardware.ramType, hardware.capacityGB && `${hardware.capacityGB}GB`, hardware.busSpeed && `${hardware.busSpeed}MHz`].filter(Boolean).join(' • ');
+    if (category === 'RAM') return [hardware.model, hardware.ramType, hardware.capacityGB && `${hardware.capacityGB}GB`, hardware.busSpeed && `${hardware.busSpeed}MHz`].filter(Boolean).join(' • ');
     if (category === 'STORAGE') return [hardware.model, hardware.storageType, hardware.capacityGB && `${hardware.capacityGB}GB`].filter(Boolean).join(' • ');
     if (category === 'PSU') return [hardware.model, hardware.watt && `${hardware.watt}W`, hardware.standard80Plus].filter(Boolean).join(' • ');
     return [hardware.model].filter(Boolean).join(' • ');
@@ -419,7 +458,10 @@ export default function ProductFormModal({
                     if (!isValidCategory(nextCategory)) {
                         throw new Error(`ไม่รองรับหมวดหมู่ ${nextCategory || '-'}`);
                     }
-                    const nextHardware = createHardwareFromMaster(data, nextCategory);
+                    const parsedHardware = createHardwareFromMaster(data, nextCategory);
+                    const nextHardware = nextCategory === 'RAM'
+                        ? fillRamModelIfMissing(parsedHardware, [data])
+                        : parsedHardware;
                     const nextMasterId = data.masterId ?? data.id ?? prefillMasterId;
                     setCategory(nextCategory);
                     setHardware(nextHardware);
@@ -551,9 +593,17 @@ export default function ProductFormModal({
                 }
             }
             const displayName = item?.displayName
+                || item?.display_name
                 || item?.name
-                || sources.map((source) => source?.displayName || source?.name).find(Boolean)
+                || sources.map((source) => source?.displayName || source?.display_name || source?.name).find(Boolean)
                 || '';
+            // Model จาก API มีสิทธิ์ก่อน หากไม่มีใช้ Series/ชื่อ RAM แทน โดยคง RAM Type เดิมไว้
+            if (category === 'RAM') {
+                nextHardware = fillRamModelIfMissing(nextHardware, sources);
+                if (!cleanValue(nextHardware.model)) {
+                    nextHardware = fillRamModelIfMissing(nextHardware, [{ displayName }]);
+                }
+            }
             setHardware(nextHardware);
             setSelectedMasterId(masterId ?? null);
             setOriginalMasterValues(createMasterSnapshot(category, nextHardware));

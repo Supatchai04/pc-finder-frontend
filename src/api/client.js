@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { tokenStorage } from '../auth/tokenStorage';
 import { endpoints } from './endpoints';
-import { getApiBaseUrl } from '../utils/api';
+import { getApiBaseUrl, isMockEnabled } from '../utils/api';
 
 const baseURL = getApiBaseUrl().replace(/\/$/, '');
 
@@ -30,6 +30,18 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
+
+    // Mock login uses local placeholder tokens. A 401 from a live lookup API
+    // must not clear the mock session or redirect the shop back to Login.
+    // Real accounts still follow the normal refresh/expiry flow below.
+    if (
+      error.response?.status === 401 &&
+      isMockEnabled() &&
+      tokenStorage.getAccessToken() === 'mock-access-token'
+    ) {
+      return Promise.reject(error);
+    }
+
     const refreshToken = tokenStorage.getRefreshToken();
     const isRefreshRequest = original?.url?.includes(endpoints.auth.refresh);
 
