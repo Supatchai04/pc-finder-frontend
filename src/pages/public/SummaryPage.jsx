@@ -173,9 +173,9 @@ const buildFullAddress = (shop) => {
       isBangkok
         ? province
         : addPrefix(
-            province,
-            'จังหวัด'
-          )
+          province,
+          'จังหวัด'
+        )
     );
   }
 
@@ -347,219 +347,116 @@ export default function SummaryPage() {
     );
 
 
-  /* =========================================================
-     UI
-     ========================================================= */
+  const pages = [];
+  for (let index = 0; index < rows.length; index += 9) {
+    pages.push(rows.slice(index, index + 9));
+  }
+  if (!pages.length) pages.push([]);
 
   return (
-    <div className="summary-page-wrap">
-
-      {/* =========================================
-          TOOLBAR
-          ========================================= */}
-
-      <div className="summary-toolbar print-hide">
-
-        <button
-          type="button"
-          className="outline-btn"
-          onClick={() =>
-            navigate(-1)
+    <div className="summary-page-wrap pcf-summary-pages">
+      <style>{`
+        .pcf-summary-pages { height: auto; max-height: none; overflow: visible; }
+        .pcf-summary-pages .summary-sheet {
+          height: auto; max-height: none; overflow: visible;
+          box-sizing: border-box; margin: 24px auto;
+        }
+        .pcf-summary-pages table { width: 100%; table-layout: fixed; }
+        .pcf-summary-pages th, .pcf-summary-pages td {
+          white-space: normal; overflow-wrap: anywhere;
+          vertical-align: top; height: auto; max-height: none;
+        }
+        .pcf-summary-pages .summary-page-footer {
+          display: flex; justify-content: space-between; gap: 12px;
+          margin-top: 22px; padding-top: 12px; border-top: 1px solid #dce2e8;
+          color: #728297; font-size: 11px;
+        }
+        .pcf-summary-pages .summary-page-footer span { text-align: right; }
+        @media (max-width: 600px) {
+          .pcf-summary-pages .summary-sheet { width: calc(100% - 20px); padding: 16px 10px; }
+          .pcf-summary-pages th, .pcf-summary-pages td { padding: 8px 4px; font-size: 11px; }
+        }
+        @media print {
+          @page { size: A4 portrait; margin: 12mm; }
+          html, body, #root, .public-app {
+            height: auto !important; min-height: 0 !important;
+            max-height: none !important; overflow: visible !important;
           }
-        >
-
-          <ArrowLeft
-            size={16}
-          />
-
-          กลับ
-
+          .pcf-summary-pages {
+            display: block !important; height: auto !important;
+            min-height: 0 !important; max-height: none !important;
+            overflow: visible !important; padding: 0 !important; background: white;
+          }
+          .pcf-summary-pages .summary-sheet {
+            display: block; width: 100% !important; height: auto !important;
+            min-height: 0 !important; max-height: none !important;
+            overflow: visible !important; margin: 0 !important; padding: 0 !important;
+            border: 0; box-shadow: none; break-inside: auto;
+          }
+          .pcf-summary-pages .summary-sheet + .summary-sheet {
+            break-before: page; page-break-before: always;
+          }
+          .pcf-summary-pages table { overflow: visible !important; }
+          .pcf-summary-pages thead { display: table-header-group; }
+          .pcf-summary-pages tr { break-inside: avoid; page-break-inside: avoid; }
+          .pcf-summary-pages th, .pcf-summary-pages td { padding: 3mm 2mm; font-size: 10pt; }
+          .pcf-summary-pages .summary-total,
+          .pcf-summary-pages .summary-page-footer { break-inside: avoid; page-break-inside: avoid; }
+          .pcf-summary-pages .summary-toolbar { display: none !important; }
+        }
+      `}</style>
+      <div className="summary-toolbar print-hide">
+        <button type="button" className="outline-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} /> กลับ
         </button>
-
-
         {!error && (
-          <button
-            type="button"
-            className="primary-btn"
-            onClick={() =>
-              window.print()
-            }
-          >
-
-            <Printer
-              size={16}
-            />
-
-            พิมพ์ / บันทึก PDF
-
+          <button type="button" className="primary-btn" onClick={() => window.print()}>
+            <Printer size={16} /> พิมพ์ / บันทึก PDF
           </button>
         )}
-
       </div>
 
-
-      {/* =========================================
-          SUMMARY SHEET
-          ========================================= */}
-
-      <div className="summary-sheet">
-
-        <Brand />
-
-
-        <h1>
-          สรุปรายการสินค้า
-        </h1>
-
-
-        <p>
-          เอกสารสรุปรายการสินค้าที่เลือกจาก PC FINDER
-        </p>
-
-
-        {error ? (
-
-          <div className="empty-inline">
-            {error}
-          </div>
-
-        ) : (
-
-          <>
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>
-                    หมวด
-                  </th>
-
-                  <th>
-                    ชื่อสินค้า
-                  </th>
-
-                  <th>
-                    ราคา
-                  </th>
-
-                  <th>
-                    ชื่อร้านค้า
-                  </th>
-
-                  <th>
-                    ที่อยู่ร้านค้า
-                  </th>
-
+      {error ? (
+        <div className="summary-sheet"><Brand /><div className="empty-inline">{error}</div></div>
+      ) : pages.map((pageRows, pageIndex) => (
+        <section className="summary-sheet" key={pageIndex} aria-label={`สรุปรายการ หน้า ${pageIndex + 1}`}>
+          <Brand />
+          <h1>สรุปรายการสินค้า</h1>
+          <p>เอกสารสรุปรายการสินค้าที่เลือกจาก PC FINDER</p>
+          <table>
+            <colgroup>
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '19%' }} />
+              <col style={{ width: '32%' }} />
+            </colgroup>
+            <thead>
+              <tr><th scope="col">หมวด</th><th scope="col">ชื่อสินค้า</th><th scope="col">ราคา</th><th scope="col">ชื่อร้านค้า</th><th scope="col">ที่อยู่ร้านค้า</th></tr>
+            </thead>
+            <tbody>
+              {pageRows.map((item, itemIndex) => (
+                <tr key={item.shopProductId ?? `${pageIndex}-${itemIndex}`}>
+                  <td>{item.category || '-'}</td>
+                  <td>{item.displayName || item.hardwareName || '-'}</td>
+                  <td>{Number(item.price || item.unitPrice || 0).toLocaleString()}.-</td>
+                  <td>{item.shop?.shopName || '-'}</td>
+                  <td>{buildFullAddress(item.shop)}</td>
                 </tr>
-
-              </thead>
-
-
-              <tbody>
-
-                {rows.map(
-                  (item) => (
-                    <tr
-                      key={
-                        item.shopProductId
-                      }
-                    >
-
-                      {/* CATEGORY */}
-
-                      <td>
-                        {item.category ||
-                          '-'}
-                      </td>
-
-
-                      {/* PRODUCT NAME */}
-
-                      <td>
-                        {item.displayName ||
-                          item.hardwareName ||
-                          '-'}
-                      </td>
-
-
-                      {/* PRICE */}
-
-                      <td>
-                        {Number(
-                          item.price ||
-                          item.unitPrice ||
-                          0
-                        ).toLocaleString()}
-                        .-
-                      </td>
-
-
-                      {/* STORE */}
-
-                      <td>
-                        {item.shop
-                          ?.shopName ||
-                          '-'}
-                      </td>
-
-
-                      {/* FULL ADDRESS */}
-
-                      <td>
-                        {buildFullAddress(
-                          item.shop
-                        )}
-                      </td>
-
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-
-            {/* =====================================
-                TOTAL
-                ===================================== */}
-
+              ))}
+            </tbody>
+          </table>
+          {pageIndex === pages.length - 1 && (
             <div className="summary-total">
-
-              <span>
-                รวมทั้งหมด
-              </span>
-
-
-              <strong>
-                {Number(
-                  total || 0
-                ).toLocaleString()}
-                .-
-              </strong>
-
+              <span>รวมทั้งหมด</span><strong>{Number(total || 0).toLocaleString()}.-</strong>
             </div>
-
-
-            <div className="summary-meta">
-
-              ทั้งหมด{' '}
-              {data?.summary
-                ?.totalItems ??
-                rows.length}{' '}
-              รายการ
-
-            </div>
-
-          </>
-
-        )}
-
-      </div>
-
+          )}
+          <div className="summary-page-footer">
+            <div>หน้า {pageIndex + 1} / {pages.length}</div>
+            <span>ทั้งหมด {data?.summary?.totalItems ?? rows.length} รายการ</span>
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
