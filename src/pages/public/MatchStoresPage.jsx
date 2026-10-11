@@ -30,6 +30,8 @@ import {
 
   useMemo,
 
+  useRef,
+
   useState,
 
 } from 'react';
@@ -74,6 +76,8 @@ import { buildStorage } from '../../utils/buildStorage';
 
 
 
+
+const PRODUCTS_PER_STORE_PAGE = 6;
 
 const getName = (item) =>
 
@@ -280,7 +284,141 @@ export default function MatchStoresPage() {
 
   const [actionError, setActionError] = useState('');
 
-  const [sort, setSort] = useState('price');
+  const [sort, setSort] = useState('relevance');
+  const [productPagesByShop, setProductPagesByShop] = useState({});
+
+  const [favoriteStoreIds, setFavoriteStoreIds] = useState(() => new Set());
+  const [favoriteStoreBusyIds, setFavoriteStoreBusyIds] = useState(() => new Set());
+  const [favoriteStoresLoading, setFavoriteStoresLoading] = useState(true);
+  const [favoriteStoreError, setFavoriteStoreError] = useState('');
+  const [favoriteStoreReload, setFavoriteStoreReload] = useState(0);
+  const favoriteStoreLocks = useRef(new Set());
+  const favoriteStoreSession = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+    favoriteStoreSession.current += 1;
+    favoriteStoreLocks.current.clear();
+    setFavoriteStoreIds(new Set());
+    setFavoriteStoreBusyIds(new Set());
+    setFavoriteStoreError('');
+    const role = String(user?.role || '').toUpperCase();
+    if (!user || !['USER', 'CUSTOMER'].includes(role)) {
+      setFavoriteStoresLoading(false);
+      return () => { active = false; };
+    }
+    setFavoriteStoresLoading(true);
+    const load = async () => {
+      try {
+        const ids = new Set();
+        let page = 1;
+        let totalPages = 1;
+        do {
+          const response = await userService.favoriteStores({ page, limit: 100 });
+          if (!active) return;
+          for (const store of Array.isArray(response?.data) ? response.data : []) {
+            if (store.shopId != null) ids.add(String(store.shopId));
+          }
+          totalPages = Number(response?.meta?.totalPages) || 1;
+          page += 1;
+        } while (page <= totalPages);
+        setFavoriteStoreIds(ids);
+      } catch (err) {
+        if (active) setFavoriteStoreError(getApiErrorMessage(err, 'โหลดร้านค้าที่บันทึกไว้ไม่สำเร็จ'));
+      } finally {
+        if (active) setFavoriteStoresLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+      favoriteStoreSession.current += 1;
+    };
+  }, [user, favoriteStoreReload]);
+
+  const toggleFavoriteStore = async (shopId) => {
+    if (shopId == null) return;
+    if (!user) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    if (!['USER', 'CUSTOMER'].includes(String(user.role || '').toUpperCase())) {
+      setFavoriteStoreError('การบันทึกร้านค้าสำหรับบัญชีลูกค้าเท่านั้น');
+      return;
+    }
+    const key = String(shopId);
+    if (favoriteStoresLoading || favoriteStoreLocks.current.has(key)) return;
+    const session = favoriteStoreSession.current;
+    const saved = favoriteStoreIds.has(key);
+    favoriteStoreLocks.current.add(key);
+    setFavoriteStoreBusyIds(previous => new Set(previous).add(key));
+    setFavoriteStoreError('');
+    try {
+      if (saved) await userService.removeFavoriteStore(shopId);
+      else await userService.addFavoriteStore(shopId);
+      if (session !== favoriteStoreSession.current) return;
+      setFavoriteStoreIds(previous => {
+        const next = new Set(previous);
+        if (saved) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    } catch (err) {
+      if (session === favoriteStoreSession.current) {
+        setFavoriteStoreError(getApiErrorMessage(err, saved ? 'ยกเลิกบันทึกร้านค้าไม่สำเร็จ' : 'บันทึกร้านค้าไม่สำเร็จ'));
+      }
+    } finally {
+      if (session === favoriteStoreSession.current) {
+        favoriteStoreLocks.current.delete(key);
+        setFavoriteStoreBusyIds(previous => {
+          const next = new Set(previous);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
+
+  const renderStoreFavoriteButton = (shop) => {
+    const saved = favoriteStoreIds.has(String(shop.shopId));
+    const busy = favoriteStoreBusyIds.has(String(shop.shopId));
+    const label = saved ? 'ยกเลิกบันทึกร้านค้า' : 'บันทึกร้านค้า';
+    return (
+      <button
+        type="button"
+        className="compare-store-favorite"
+        disabled={shop.shopId == null || favoriteStoresLoading || busy || Boolean(favoriteStoreError)}
+        aria-label={`${label} ${shop.shopName || ''}`}
+        aria-pressed={saved}
+        aria-busy={busy}
+        title={label}
+        onClick={() => toggleFavoriteStore(shop.shopId)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          gap: 7, minWidth: 44, minHeight: 42, padding: '9px 12px',
+          border: saved ? '1px solid #f4a5b8' : '1px solid #d6e2ef',
+          borderRadius: 10, background: saved ? '#fff0f4' : '#fff',
+          color: saved ? '#c32750' : '#526b86', fontSize: 12, fontWeight: 600,
+          fontFamily: 'inherit', flexShrink: 0,
+          cursor: busy || favoriteStoresLoading || favoriteStoreError ? 'wait' : 'pointer',
+          opacity: busy || favoriteStoresLoading || favoriteStoreError ? 0.6 : 1,
+        }}
+      >
+        <Heart size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+        <span>{busy ? 'กำลังบันทึก...' : favoriteStoresLoading ? 'กำลังโหลด...' : saved ? 'บันทึกแล้ว' : 'บันทึกร้านค้า'}</span>
+      </button>
+    );
+  };
+
+  const renderStoreFavoriteError = () => favoriteStoreError && (
+    <div className="inline-error" role="alert">
+      {favoriteStoreError}{' '}
+      <button type="button" onClick={() => setFavoriteStoreReload(value => value + 1)}>
+        ลองใหม่
+      </button>
+    </div>
+  );
+
 
 
 
@@ -840,7 +978,7 @@ export default function MatchStoresPage() {
 
     () =>
 
-      [...stores].sort(
+      sort === 'relevance' ? stores : [...stores].sort(
 
         (a, b) =>
 
@@ -1894,6 +2032,10 @@ export default function MatchStoresPage() {
 
               >
 
+                <option value="relevance">
+                  ที่เกี่ยวข้องมากที่สุด
+                </option>
+
                 <option value="price">
 
                   ราคาต่ำ - สูง
@@ -1963,6 +2105,8 @@ export default function MatchStoresPage() {
 
 
 
+
+        {renderStoreFavoriteError()}
 
         {actionError && (
 
@@ -2050,11 +2194,27 @@ export default function MatchStoresPage() {
 
 
 
-                const emptyProductSlots = selectedItems.filter(({ category, item }) =>
-                  isUnavailableProduct(
-                    findMatchingProduct(details, category, getId(item))
-                  )
-                ).length;
+                const availableSelectedItems = selectedItems.filter(({ category, item }) =>
+                  !isUnavailableProduct(findMatchingProduct(details, category, getId(item)))
+                );
+                const productPageCount = Math.max(
+                  1,
+                  Math.ceil(availableSelectedItems.length / PRODUCTS_PER_STORE_PAGE)
+                );
+                const shopPageKey = String(shop.shopId);
+                const currentProductPage = Math.min(
+                  productPageCount,
+                  Math.max(1, productPagesByShop[shopPageKey] || 1)
+                );
+                const visibleSelectedItems = availableSelectedItems.slice(
+                  (currentProductPage - 1) * PRODUCTS_PER_STORE_PAGE,
+                  currentProductPage * PRODUCTS_PER_STORE_PAGE
+                );
+                // Keep existing invisible placeholders but cap them to one page.
+                const emptyProductSlots = Math.max(
+                  0,
+                  Math.min(PRODUCTS_PER_STORE_PAGE, selectedItemCount) - visibleSelectedItems.length
+                );
 
                 return (
 
@@ -2120,11 +2280,12 @@ export default function MatchStoresPage() {
 
 
 
-                        <h3>
-
-                          {shop.shopName}
-
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px 12px', flexWrap: 'wrap' }}>
+                          <h3 style={{ minWidth: 0, overflowWrap: 'anywhere', flex: '1 1 120px' }}>
+                            {shop.shopName}
+                          </h3>
+                          {renderStoreFavoriteButton(shop)}
+                        </div>
 
 
 
@@ -2148,17 +2309,48 @@ export default function MatchStoresPage() {
 
 
 
-                          {shop.distanceKm !=
 
-                            null
-
-                            ? ` • ${shop.distanceKm} กม.`
-
-                            : ''}
 
                         </p>
 
 
+
+                        {shop.distanceKm != null && (
+                          <div
+                            className="compare-store-distance"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              flexWrap: 'wrap',
+                              gap: '4px 8px',
+                              width: 'fit-content',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                              margin: '8px 0',
+                              padding: '7px 12px',
+                              border: '1px solid #99d5c5',
+                              borderRadius: 10,
+                              background: '#e8f7f1',
+                              color: '#08634f',
+                            }}
+                          >
+                            <span style={{ fontSize: 12, fontWeight: 600 }}>
+                              ระยะทาง
+                            </span>
+                            <strong
+                              style={{
+                                fontSize: 20,
+                                fontWeight: 700,
+                                lineHeight: 1.3,
+                                fontVariantNumeric: 'tabular-nums',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {shop.distanceKm}
+                              <span style={{ marginLeft: 5, fontSize: 14 }}>กม.</span>
+                            </strong>
+                          </div>
+                        )}
 
                         <small>
 
@@ -2188,7 +2380,7 @@ export default function MatchStoresPage() {
 
 
 
-                      {selectedItems.map(
+                      {visibleSelectedItems.map(
 
                         (
 
@@ -2559,15 +2751,37 @@ export default function MatchStoresPage() {
                           );
 
                         }
-
                       )}
-
-
-
                     </div>
 
-
-
+                    {productPageCount > 1 && (
+                      <nav
+                        className="compare-product-pagination"
+                        aria-label={`เปลี่ยนหน้าสินค้าของร้าน ${shop.shopName || ''}`}
+                      >
+                        <button
+                          type="button"
+                          disabled={currentProductPage === 1}
+                          onClick={() => setProductPagesByShop((previous) => ({
+                            ...previous,
+                            [shopPageKey]: currentProductPage - 1,
+                          }))}
+                        >
+                          ก่อนหน้า
+                        </button>
+                        <span>หน้า {currentProductPage} / {productPageCount}</span>
+                        <button
+                          type="button"
+                          disabled={currentProductPage === productPageCount}
+                          onClick={() => setProductPagesByShop((previous) => ({
+                            ...previous,
+                            [shopPageKey]: currentProductPage + 1,
+                          }))}
+                        >
+                          ถัดไป
+                        </button>
+                      </nav>
+                    )}
 
                     <div className="compare-product-empty-slots" aria-hidden="true">
                       {Array.from({ length: emptyProductSlots }, (_, index) => (
@@ -2810,6 +3024,8 @@ export default function MatchStoresPage() {
 
 
         <Modal.Body>
+          {renderStoreFavoriteError()}
+
 
 
 
@@ -2846,6 +3062,10 @@ export default function MatchStoresPage() {
                 <>
 
 
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                    {renderStoreFavoriteButton(selectedStore)}
+                  </div>
 
                   <section className="public-store-modal-header">
 

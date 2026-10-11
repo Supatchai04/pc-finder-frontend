@@ -4988,6 +4988,42 @@ textarea.form-control {
   pointer-events: none;
 }
 
+/* Independent product pages inside each matched store card. */
+.compare-product-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.compare-product-pagination span {
+  color: #647589;
+  font-size: 12px;
+}
+
+.compare-product-pagination button {
+  padding: 6px 11px;
+  background: #fff;
+  color: #176fcf;
+  border: 1px solid #cfe2f9;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compare-product-pagination button:hover:not(:disabled) {
+  background: #edf6ff;
+  border-color: #a9cef6;
+}
+
+.compare-product-pagination button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
 /* ---------- TOTAL + ACTIONS ---------- */
 
 .compare-store-total {
@@ -7070,3 +7106,61 @@ body,
   border-radius: 50%;
 }
 
+
+
+/* Back navigation: login and matching results only */
+.login-page .login-brand-row .back-link,
+.compare-page-workspace .match-results-main > .back-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid #c7ddf8;
+  border-radius: 10px;
+  background: #eaf3ff;
+  color: #2367b5;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(30, 83, 143, 0.06);
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.login-page .login-brand-row .back-link:hover,
+.compare-page-workspace .match-results-main > .back-inline-btn:hover {
+  background: #dcecff;
+  border-color: #94bdf0;
+  color: #18559c;
+  text-decoration: none;
+  box-shadow: 0 3px 8px rgba(30, 83, 143, 0.1);
+}
+
+.login-page .login-brand-row .back-link:focus-visible,
+.compare-page-workspace .match-results-main > .back-inline-btn:focus-visible {
+  outline: 3px solid #2785ee;
+  outline-offset: 3px;
+}
+
+.login-page .login-brand-row .back-link svg,
+.compare-page-workspace .match-results-main > .back-inline-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.login-page .login-brand-row .back-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page .login-brand-row .back-link,
+  .compare-page-workspace .match-results-main > .back-inline-btn {
+    transition: none;
+  }
+}

@@ -1793,8 +1793,6 @@ export default function FavoritesPage() {
 
                   'PSU',
 
-                  'COOLER',
-
                 ].map(
 
                   (item) => (

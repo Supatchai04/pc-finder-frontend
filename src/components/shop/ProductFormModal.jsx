@@ -929,7 +929,7 @@ export default function ProductFormModal({
                                 เลือกหมวดหมู่ก่อน ระบบจะแสดงฟอร์มที่ตรงกับอุปกรณ์นั้น
                             </p>
                             <Row className="g-3">
-                                {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                                {Object.entries(CATEGORY_LABELS).filter(([value]) => value !== 'COOLER').map(([value, label]) => (
                                     <Col md={6} key={value}>
                                         <Button
                                             type="button"

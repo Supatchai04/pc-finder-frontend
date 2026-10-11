@@ -3,7 +3,6 @@ import {
   Home,
   PackageSearch,
   Search,
-  Store,
 } from 'lucide-react';
 
 import {
@@ -32,17 +31,9 @@ const userItems = [
   ...guestItems,
 
   {
-    to: '/favorites?tab=stores',
-    icon: Store,
-    label: 'ร้านค้าที่บันทึกไว้',
-    tab: 'stores',
-  },
-
-  {
-    to: '/favorites?tab=products',
+    to: '/favorites',
     icon: Heart,
-    label: 'อุปกรณ์ที่บันทึกไว้',
-    tab: 'products',
+    label: 'รายการที่บันทึกไว้',
   },
 
   {
@@ -66,28 +57,11 @@ export default function CustomerSidebar() {
       : guestItems;
 
 
-  const currentTab =
-    new URLSearchParams(
-      location.search
-    ).get('tab') ||
-    'stores';
-
-
   const isActive = (
     item
   ) => {
     const path =
       item.to.split('?')[0];
-
-
-    if (item.tab) {
-      return (
-        location.pathname ===
-          '/favorites' &&
-        currentTab ===
-          item.tab
-      );
-    }
 
 
     if (path === '/') {

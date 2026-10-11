@@ -28,6 +28,11 @@ const activeOnly = (items = []) =>
     ? items.filter((item) => !item?.deleted_at)
     : [];
 
+// Sort Thai address options alphabetically without modifying the source data.
+const thaiAddressCollator = new Intl.Collator('th-TH');
+const sortThaiAddressNames = (names) =>
+  [...names].sort(thaiAddressCollator.compare);
+
 const findProvince = (provinceName) =>
   activeOnly(thaiAddressData).find(
     (province) => province?.name_th === provinceName
@@ -110,11 +115,10 @@ export const dropdownService = {
    */
 
   provinces: () => {
-    return activeOnly(
-      thaiAddressData
-    ).map(
-      (province) =>
-        province.name_th
+    return sortThaiAddressNames(
+      activeOnly(thaiAddressData).map(
+        (province) => province.name_th
+      )
     );
   },
 
@@ -128,11 +132,10 @@ export const dropdownService = {
         provinceName
       );
 
-    return activeOnly(
-      province?.districts
-    ).map(
-      (district) =>
-        district.name_th
+    return sortThaiAddressNames(
+      activeOnly(province?.districts).map(
+        (district) => district.name_th
+      )
     );
   },
 
@@ -153,11 +156,10 @@ export const dropdownService = {
         districtName
       );
 
-    return activeOnly(
-      district?.sub_districts
-    ).map(
-      (subDistrict) =>
-        subDistrict.name_th
+    return sortThaiAddressNames(
+      activeOnly(district?.sub_districts).map(
+        (subDistrict) => subDistrict.name_th
+      )
     );
   },
 
