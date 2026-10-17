@@ -1578,8 +1578,6 @@ export default function AdminStoresPage() {
 
                   <th>เบอร์โทร</th>
 
-                  <th>จังหวัด</th>
-
                   <th>สถานะ</th>
 
                   <th>วันที่สมัคร</th>
@@ -1693,18 +1691,6 @@ export default function AdminStoresPage() {
                       <td>
 
                         {storeItem.ownerPhone ||
-
-                          '-'}
-
-                      </td>
-
-
-
-
-
-                      <td>
-
-                        {storeItem.province ||
 
                           '-'}
 
