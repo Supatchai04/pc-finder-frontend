@@ -341,6 +341,11 @@ const isSameMasterValues = (category, hardware, originalMasterValues) => {
         (field) => cleanValue(hardware?.[field.key]) === cleanValue(originalMasterValues?.[field.key]),
     );
 };
+const createStoreTitle = (category, hardware) => (HARDWARE_FIELDS[category] || [])
+    .map((field) => cleanValue(hardware?.[field.key]))
+    .filter(Boolean)
+    .join(' ');
+
 const createDisplayName = (category, hardware) => {
     if (category === 'CPU') return [hardware.brand, hardware.family, hardware.processorClass].map(cleanValue).filter(Boolean).join(' ');
     if (category === 'MAINBOARD') return [hardware.brand, hardware.serie, hardware.chipset].map(cleanValue).filter(Boolean).join(' ');
@@ -532,7 +537,7 @@ export default function ProductFormModal({
                     replaceHardware(nextHardware);
                     setStoreDetails({
                         ...INITIAL_STORE_DETAILS,
-                        customTitle: data.displayName || data.name || '',
+                        customTitle: createStoreTitle(nextCategory, nextHardware),
                     });
                     assignMasterSelection(nextMasterId, nextCategory, nextHardware);
                 } catch (err) {
@@ -591,6 +596,7 @@ export default function ProductFormModal({
         clearMasterSelection();
         setCategory(nextCategory);
         replaceHardware(createHardwareState(nextCategory));
+        setStoreDetails((previous) => ({ ...previous, customTitle: '' }));
         setValidationError('');
         setError('');
         setAutocompleteKeyword('');
@@ -610,6 +616,12 @@ export default function ProductFormModal({
             clearMasterSelection();
         }
         replaceHardware(nextHardware);
+        if (!editItem) {
+            setStoreDetails((previous) => ({
+                ...previous,
+                customTitle: createStoreTitle(category, nextHardware),
+            }));
+        }
         if (autocomplete && !editItem) {
             setAutocompleteFieldKey(key);
             setAutocompleteKeyword(value);
@@ -682,7 +694,7 @@ export default function ProductFormModal({
             assignMasterSelection(masterId, selectedCategory, nextHardware);
             setStoreDetails((previous) => ({
                 ...previous,
-                customTitle: displayName || previous.customTitle,
+                customTitle: createStoreTitle(selectedCategory, nextHardware),
             }));
             setAutocompleteKeyword('');
             setAutocompleteFieldKey('');
@@ -970,7 +982,7 @@ export default function ProductFormModal({
                                         </Form.Label>
                                         <Form.Control
                                             value={storeDetails.customTitle}
-                                            placeholder="กรอกชื่อสินค้าที่ต้องการแสดง"
+                                            placeholder={editItem ? "กรอกชื่อสินค้าที่ต้องการแสดง" : "ชื่อสินค้าจะรวมจากข้อมูลด้านบนอัตโนมัติ"}
                                             onChange={(event) => updateStoreDetail('customTitle', event.target.value)}
                                         />
                                     </Form.Group>

@@ -3063,11 +3063,7 @@ export default function MatchStoresPage() {
 
 
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                    {renderStoreFavoriteButton(selectedStore)}
-                  </div>
-
-                  <section className="public-store-modal-header">
+                  <section className="public-store-modal-header" style={{ flexWrap: 'wrap' }}>
 
 
 
@@ -3119,7 +3115,7 @@ export default function MatchStoresPage() {
 
 
 
-                    <div>
+                    <div style={{ flex: '1 1 180px', minWidth: 0, overflowWrap: 'anywhere' }}>
 
 
 
@@ -3155,6 +3151,9 @@ export default function MatchStoresPage() {
 
 
 
+                    <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                    {renderStoreFavoriteButton(selectedStore)}
+                  </div>
                   </section>
 
 
