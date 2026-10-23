@@ -41,6 +41,41 @@ export const getFacebookHref = (value) => {
   }
 };
 
+/**
+ * Different store endpoints may put contact details at the response root,
+ * inside `shop`, or as JSON text. Merge the fields instead of taking the
+ * first truthy contact object, because it can have an incomplete facebookLink.
+ * `sources` are passed from most to least authoritative.
+ */
+export const mergeContactChannels = (...sources) => {
+  const entries = sources
+    .filter((value) => value != null)
+    .map((value) => {
+      const object = getContactChannels(value);
+      const nested = getContactChannels(object.contactChannels ?? object.contact);
+      return { ...object, ...nested };
+    });
+
+  // Keep ordinary fields from the highest-priority source that supplied them.
+  const merged = {};
+  for (const entry of [...entries].reverse()) {
+    Object.assign(merged, entry);
+  }
+
+  // A bare facebook.com homepage must not override a full page/profile URL
+  // returned in another part of the SAME API result.
+  const validLinks = entries
+    .map((entry) => entry.facebookLink ?? entry.facebook_link)
+    .map(getFacebookHref)
+    .filter(Boolean);
+  const fullLink = validLinks.find((href) => {
+    const parsed = new URL(href);
+    return parsed.pathname !== '/' || Boolean(parsed.search || parsed.hash);
+  });
+  merged.facebookLink = fullLink ?? validLinks[0] ?? '';
+  return merged;
+};
+
 // The Facebook page name is displayed separately by the store details page.
 // This component only renders the Facebook URL supplied in facebookLink.
 export default function FacebookContactLink({ url }) {

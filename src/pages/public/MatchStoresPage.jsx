@@ -71,7 +71,7 @@ import { userLocationService } from '../../services/userLocationService';
 
 
 import { getApiErrorMessage } from '../../utils/api';
-import FacebookContactLink, { getContactChannels } from '../../components/ui/FacebookContactLink';
+import FacebookContactLink, { mergeContactChannels } from '../../components/ui/FacebookContactLink';
 
 import { buildStorage } from '../../utils/buildStorage';
 
@@ -1569,29 +1569,18 @@ export default function MatchStoresPage() {
 
 
 
-              contactChannels:
-
-                rawProfile
-
-                  ?.contactChannels ||
-
-                profileShop
-
-                  ?.contactChannels ||
-
-                profileShop
-
-                  ?.contact ||
-
-                previous
-
-                  ?.contactChannels ||
-
-                previous
-
-                  ?.contact ||
-
-                {},
+              contactChannels: mergeContactChannels(
+                // Details for this shop take precedence over the list card.
+                profileShop?.contactChannels,
+                rawProfile?.contactChannels,
+                profileShop?.contact,
+                rawProfile?.contact,
+                profileShop,
+                rawProfile,
+                previous?.contactChannels,
+                previous?.contact,
+                previous,
+              ),
 
 
 
@@ -1733,7 +1722,7 @@ export default function MatchStoresPage() {
 
   const contact =
 
-    getContactChannels(selectedStore?.contactChannels || selectedStore?.contact);
+    mergeContactChannels(selectedStore?.contactChannels, selectedStore?.contact, selectedStore);
 
 
 

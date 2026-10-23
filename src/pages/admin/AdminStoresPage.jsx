@@ -57,7 +57,7 @@ import LoadingState from '../../components/ui/LoadingState';
 import { adminService } from '../../services/adminService';
 
 import { getApiErrorMessage } from '../../utils/api';
-import FacebookContactLink, { getContactChannels } from '../../components/ui/FacebookContactLink';
+import FacebookContactLink, { mergeContactChannels } from '../../components/ui/FacebookContactLink';
 
 
 
@@ -929,7 +929,11 @@ export default function AdminStoresPage() {
 
   const contact =
 
-    getContactChannels(rawContact);
+    mergeContactChannels(
+      detail?.contactChannels, detail?.contact,
+      shop?.contactChannels, shop?.contact,
+      detail, shop,
+    );
 
 
 
