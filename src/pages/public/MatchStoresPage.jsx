@@ -66,6 +66,7 @@ import { hardwareService } from '../../services/hardwareService';
 import { storeService } from '../../services/storeService';
 
 import { userService } from '../../services/userService';
+import { userLocationService } from '../../services/userLocationService';
 
 
 
@@ -855,9 +856,14 @@ export default function MatchStoresPage() {
 
         try {
 
-          const userLocation =
-
-            await getLocation();
+          // For members use their saved location (backend, then this device).
+          // Only fall back to browser GPS when no saved location is available.
+          let userLocation = null;
+          if (String(user?.role || '').toUpperCase() === 'USER') {
+            const saved = await userLocationService.loadSaved(user);
+            userLocation = saved.position;
+          }
+          if (!userLocation) userLocation = await getLocation();
 
 
 
@@ -968,6 +974,10 @@ export default function MatchStoresPage() {
   }, [
 
     hardwareList,
+    user?.role,
+    user?.userId,
+    user?.id,
+    user?.email,
 
   ]);
 

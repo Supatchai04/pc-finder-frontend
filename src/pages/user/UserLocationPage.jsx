@@ -1,111 +1,133 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Save } from 'lucide-react';
+import { CheckCircle2, Info, MapPin, Save } from 'lucide-react';
+import { useAuth } from '../../auth/AuthContext';
+import CustomerPageFrame from '../../components/navigation/CustomerPageFrame';
 import PageHeader from '../../components/ui/PageHeader';
 import LoadingState from '../../components/ui/LoadingState';
 import GoogleMapPicker from '../../components/maps/GoogleMapPicker';
 import { userLocationService } from '../../services/userLocationService';
 import { getApiErrorMessage } from '../../utils/api';
 
+const emptyPosition = { latitude: '', longitude: '' };
 const validCoordinate = (value, limit) => (
-  (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) &&
+  value !== '' && value !== null && value !== undefined &&
   Number.isFinite(Number(value)) && Math.abs(Number(value)) <= limit
 );
+const isValidPosition = (value) =>
+  validCoordinate(value.latitude, 90) && validCoordinate(value.longitude, 180);
 
 export default function UserLocationPage() {
-  const [position, setPosition] = useState({ latitude: '', longitude: '' });
+  const { user } = useAuth();
+  const [position, setPosition] = useState(emptyPosition);
+  const [savedPosition, setSavedPosition] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loaded, setLoaded] = useState(false);
-  const [attempt, setAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [source, setSource] = useState('none');
+  const [readIssue, setReadIssue] = useState(false);
   const savingRef = useRef(false);
-  const validPosition = validCoordinate(position.latitude, 90) &&
-    validCoordinate(position.longitude, 180);
+  const validPosition = isValidPosition(position);
+  const changed = validPosition && (
+    source === 'device' || !savedPosition ||
+    Number(position.latitude) !== savedPosition.latitude ||
+    Number(position.longitude) !== savedPosition.longitude
+  );
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    setLoaded(false);
     setError('');
+    setMessage('');
     const load = async () => {
       try {
-        const response = await userLocationService.get();
-        if (response?.status !== 'success') {
-          throw new Error(response?.message || 'โหลดตำแหน่งไม่สำเร็จ');
-        }
-        const data = response.data;
-        const empty = data == null ||
-          ((data.latitude == null || data.latitude === '') &&
-            (data.longitude == null || data.longitude === ''));
-        if (!empty && !(validCoordinate(data.latitude, 90) && validCoordinate(data.longitude, 180))) {
-          throw new Error('ข้อมูลพิกัดที่ได้รับไม่ถูกต้อง กรุณาลองโหลดอีกครั้ง');
-        }
-        if (active) {
-          setPosition(empty ? { latitude: '', longitude: '' } : {
-            latitude: Number(data.latitude), longitude: Number(data.longitude),
-          });
-          setLoaded(true);
-        }
+        const result = await userLocationService.loadSaved(user);
+        if (!active) return;
+        setPosition(result.position || emptyPosition);
+        setSavedPosition(result.position);
+        setSource(result.source);
+        setReadIssue(Boolean(result.readError));
       } catch (err) {
-        if (active) setError(getApiErrorMessage(err, 'โหลดตำแหน่งไม่สำเร็จ'));
+        if (active) {
+          setPosition(emptyPosition);
+          setSavedPosition(null);
+          setReadIssue(true);
+          setError(getApiErrorMessage(err, 'โหลดข้อมูลพิกัดเดิมไม่ได้ แต่คุณยังบันทึกตำแหน่งใหม่ได้'));
+        }
       } finally {
         if (active) setLoading(false);
       }
     };
     load();
     return () => { active = false; };
-  }, [attempt]);
+  }, [user?.userId, user?.id, user?.email]);
 
   const save = async () => {
-    if (!loaded || !validPosition || savingRef.current) return;
+    if (!validPosition || savingRef.current) return;
+    const nextPosition = {
+      latitude: Number(position.latitude),
+      longitude: Number(position.longitude),
+    };
     savingRef.current = true;
     setSaving(true);
     setError('');
     setMessage('');
     try {
-      const response = await userLocationService.update({
-        latitude: Number(position.latitude), longitude: Number(position.longitude),
-      });
-      if (response?.status !== 'success') {
+      const response = await userLocationService.update(nextPosition);
+      if (response?.status && response.status !== 'success') {
         throw new Error(response?.message || 'บันทึกตำแหน่งไม่สำเร็จ');
       }
-      setMessage(response.message || 'อัปเดตตำแหน่งเรียบร้อยแล้ว');
+      userLocationService.cacheSaved(user, nextPosition);
+      setPosition(nextPosition);
+      setSavedPosition(nextPosition);
+      setSource('saved');
+      setReadIssue(false);
+      setMessage(response?.message || 'บันทึกตำแหน่งเรียบร้อยแล้ว');
     } catch (err) {
-      setError(getApiErrorMessage(err, 'บันทึกตำแหน่งไม่สำเร็จ'));
+      setError(getApiErrorMessage(err, 'บันทึกตำแหน่งไม่สำเร็จ กรุณาลองอีกครั้ง'));
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
   };
 
-  if (loading) return <LoadingState label="กำลังโหลดตำแหน่งของคุณ..." />;
-
   return (
-    <div className="shop-location-page">
-      <PageHeader title="ตำแหน่งของฉัน" subtitle="ค้นหาและปักหมุดที่อยู่ของคุณบนแผนที่" />
-      {error && <div className="inline-error" role="alert">{error}</div>}
-      {message && <div className="inline-success" role="status">{message}</div>}
-      {!loaded ? (
-        <button type="button" className="primary-btn" onClick={() => setAttempt(value => value + 1)}>
-          โหลดตำแหน่งอีกครั้ง
-        </button>
-      ) : (
-        <section className="section-card shop-location-card">
-          <div className="shop-location-heading">
-            <span className="shop-location-heading-icon"><MapPin size={21} /></span>
-            <div>
-              <h2>ตำแหน่งที่อยู่บนแผนที่</h2>
-              <p>ค้นหาสถานที่ หรือคลิกบนแผนที่เพื่อปักหมุดที่อยู่ของคุณ แล้วกดบันทึก</p>
+    <CustomerPageFrame>
+      <div className="user-location-page">
+        <PageHeader title="ตำแหน่งของฉัน" subtitle="บันทึกตำแหน่งสำหรับใช้เปรียบเทียบระยะทางกับร้านจำหน่ายอุปกรณ์คอมพิวเตอร์" />
+        {loading ? (
+          <LoadingState label="กำลังตรวจสอบตำแหน่งที่บันทึกไว้..." />
+        ) : (
+          <section className="section-card user-location-card">
+            <div className="user-location-card-header">
+              <div className="user-location-card-title">
+                <span className="user-location-card-icon"><MapPin size={22} /></span>
+                <div>
+                  <h2>เลือกตำแหน่งของคุณบนแผนที่</h2>
+                  <p>ค้นหาสถานที่ คลิกแผนที่ หรือลากหมุดไปยังตำแหน่งที่ต้องการ แล้วกดบันทึก</p>
+                </div>
+              </div>
+              <span className={`user-location-status ${source === 'saved' || source === 'server' ? 'is-saved' : ''}`}>
+                {source === 'saved' || source === 'server' ? <CheckCircle2 size={15} /> : <Info size={15} />}
+                {source === 'saved' || source === 'server'
+                  ? 'มีตำแหน่งที่บันทึกไว้'
+                  : source === 'device' ? 'แสดงตำแหน่งจากอุปกรณ์นี้' : 'ยังไม่มีตำแหน่งที่ยืนยันได้'}
+              </span>
             </div>
-          </div>
-          <fieldset disabled={saving} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
-            <div inert={saving ? '' : undefined}>
+            {readIssue && (
+              <div className="user-location-notice" role="status">
+                <Info size={17} />
+                <span>ยังตรวจสอบข้อมูลตำแหน่งจากเซิร์ฟเวอร์ไม่ได้ แต่สามารถปักหมุดและบันทึกใหม่ได้ ข้อมูลจะถือว่าบันทึกสำเร็จเมื่อ API ยืนยันเท่านั้น</span>
+              </div>
+            )}
+            {error && <div className="inline-error" role="alert">{error}</div>}
+            {message && <div className="inline-success" role="status">{message}</div>}
+            <fieldset disabled={saving} className="user-location-fieldset">
               <GoogleMapPicker
                 latitude={position.latitude}
                 longitude={position.longitude}
                 locationLabel="ที่อยู่ของคุณ"
-                locationHint="ค้นหาสถานที่ คลิกบนแผนที่ หรือลากหมุดเพื่อเปลี่ยนตำแหน่งที่อยู่ของคุณ"
+                locationHint="หมุดนี้จะใช้คำนวณระยะทางไปยังร้านค้า เมื่อบันทึกแล้วให้กลับไปค้นหาร้านค้าอีกครั้ง"
                 onChange={(next) => {
                   if (savingRef.current) return;
                   setPosition(next);
@@ -113,16 +135,22 @@ export default function UserLocationPage() {
                   setMessage('');
                 }}
               />
-            </div>
-            <div className="shop-location-actions">
-              <button type="button" className="primary-btn" onClick={save} disabled={saving || !validPosition}>
-                <Save size={17} />
-                {saving ? 'กำลังบันทึก...' : 'บันทึกตำแหน่งของฉัน'}
-              </button>
-            </div>
-          </fieldset>
-        </section>
-      )}
-    </div>
+              <div className="user-location-footer">
+                <div className="user-location-help">
+                  <strong>{validPosition ? (changed ? 'เลือกตำแหน่งใหม่แล้ว' : 'ตำแหน่งปัจจุบัน') : 'กรุณาปักหมุดบนแผนที่'}</strong>
+                  <span>{validPosition
+                    ? (changed ? 'กดบันทึกเพื่อใช้ตำแหน่งใหม่นี้เปรียบเทียบระยะทาง' : 'ตำแหน่งนี้พร้อมสำหรับการเปรียบเทียบระยะทาง')
+                    : 'สามารถค้นหาสถานที่หรือคลิกแผนที่เพื่อเลือกตำแหน่ง'}</span>
+                </div>
+                <button type="button" className="primary-btn user-location-save" onClick={save} disabled={saving || !validPosition || !changed}>
+                  <Save size={17} />
+                  {saving ? 'กำลังบันทึก...' : 'บันทึกตำแหน่งของฉัน'}
+                </button>
+              </div>
+            </fieldset>
+          </section>
+        )}
+      </div>
+    </CustomerPageFrame>
   );
 }
