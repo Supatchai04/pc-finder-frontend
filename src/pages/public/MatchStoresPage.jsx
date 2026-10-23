@@ -3307,11 +3307,18 @@ export default function MatchStoresPage() {
 
                           <strong>
 
-                            <FacebookContactLink name={contact?.facebook} url={contact?.facebookLink || selectedStore?.facebookLink} />
+                            {contact?.facebook || '-'}
 
                           </strong>
 
                         </div>
+
+                    <div>
+                      <span>ลิงก์ Facebook</span>
+                      <strong>
+                        <FacebookContactLink url={contact?.facebookLink || selectedStore?.facebookLink} />
+                      </strong>
+                    </div>
 
 
 

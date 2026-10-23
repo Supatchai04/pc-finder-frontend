@@ -926,11 +926,23 @@ export default function StoreProfilePage() {
                     Facebook
 
                     <strong>
-                      <FacebookContactLink name={contact.facebook} url={facebookLink} />
+                      {contact.facebook || '-'}
                     </strong>
 
                   </span>
 
+                </div>
+
+
+                {/* FACEBOOK LINK */}
+                <div>
+                  <ExternalLink size={20} />
+                  <span>
+                    ลิงก์ Facebook
+                    <strong>
+                      <FacebookContactLink url={facebookLink} />
+                    </strong>
+                  </span>
                 </div>
 
 

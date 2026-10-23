@@ -2549,8 +2549,13 @@ export default function AdminStoresPage() {
 
                     <dd>
 
-                      <FacebookContactLink name={contact.facebook} url={contact.facebookLink || detail?.facebookLink || shop?.facebookLink} />
+                      {contact.facebook || '-'}
 
+                    </dd>
+
+                    <dt>ลิงก์ Facebook</dt>
+                    <dd>
+                      <FacebookContactLink url={contact.facebookLink || detail?.facebookLink || shop?.facebookLink} />
                     </dd>
 
 

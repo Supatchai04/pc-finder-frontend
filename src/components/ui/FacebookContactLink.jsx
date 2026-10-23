@@ -41,19 +41,20 @@ export const getFacebookHref = (value) => {
   }
 };
 
-export default function FacebookContactLink({ name, url }) {
+// The Facebook page name is displayed separately by the store details page.
+// This component only renders the Facebook URL supplied in facebookLink.
+export default function FacebookContactLink({ url }) {
   const href = getFacebookHref(url);
-  const label = String(name ?? '').trim() || (href ? 'เปิด Facebook' : '-');
-  if (!href) return label;
+  if (!href) return '-';
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      title="เปิดหน้า Facebook ของร้านค้า"
+      title="เปิดลิงก์ Facebook ของร้านค้า"
       style={{ color: '#0d6efd', textDecoration: 'underline', textUnderlineOffset: '2px', overflowWrap: 'anywhere' }}
     >
-      {label}
+      {href}
     </a>
   );
 }

@@ -1130,9 +1130,16 @@ export default function StoreProductsPage() {
                       </span>
 
                       <strong>
-                        <FacebookContactLink name={contact?.facebook} url={contact?.facebookLink || store?.facebookLink} />
+                        {contact?.facebook || '-'}
                       </strong>
 
+                    </div>
+
+                    <div>
+                      <span>ลิงก์ Facebook</span>
+                      <strong>
+                        <FacebookContactLink url={contact?.facebookLink || store?.facebookLink} />
+                      </strong>
                     </div>
 
 
