@@ -96,6 +96,8 @@ export default function GoogleMapPicker({
   latitude,
   longitude,
   onChange,
+  locationLabel = 'ตำแหน่งร้าน',
+  locationHint = 'ค้นหาสถานที่ คลิกบนแผนที่ หรือลากหมุดเพื่อเปลี่ยนตำแหน่งร้านค้า',
 }) {
   const mapElementRef =
     useRef(null);
@@ -835,14 +837,13 @@ export default function GoogleMapPicker({
 
           <strong>
             {hasPosition
-              ? 'ปักหมุดตำแหน่งร้านแล้ว'
-              : 'ยังไม่ได้ปักหมุดตำแหน่งร้าน'}
+              ? `ปักหมุด${locationLabel}แล้ว`
+              : `ยังไม่ได้ปักหมุด${locationLabel}`}
           </strong>
 
 
           <span>
-            ค้นหาสถานที่ คลิกบนแผนที่
-            หรือลากหมุดเพื่อเปลี่ยนตำแหน่งร้านค้า
+            {locationHint}
           </span>
 
         </div>

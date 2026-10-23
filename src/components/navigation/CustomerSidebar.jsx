@@ -1,6 +1,7 @@
 import {
   Heart,
   Home,
+  MapPin,
   PackageSearch,
   Search,
 } from 'lucide-react';
@@ -34,6 +35,12 @@ const userItems = [
     to: '/favorites',
     icon: Heart,
     label: 'รายการที่บันทึกไว้',
+  },
+
+  {
+    to: '/location',
+    icon: MapPin,
+    label: 'ตำแหน่งของฉัน',
   },
 
   {

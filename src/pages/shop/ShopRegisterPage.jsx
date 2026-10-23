@@ -34,6 +34,7 @@ import { shopService } from '../../services/shopService';
 import { dropdownService } from '../../services/dropdownService';
 
 import { getApiErrorMessage } from '../../utils/api';
+import { getFacebookHref } from '../../components/ui/FacebookContactLink';
 
 
 
@@ -618,6 +619,11 @@ export default function ShopRegisterPage() {
         'กรุณาปักหมุดตำแหน่งร้านค้า';
 
     }
+    const facebookLink = form.facebookLink?.value?.trim();
+    if (facebookLink && !getFacebookHref(facebookLink)) {
+      errors.facebookLink = 'กรุณาระบุลิงก์ Facebook ที่ถูกต้อง';
+    }
+
 
 
 
@@ -966,6 +972,7 @@ export default function ShopRegisterPage() {
             form.facebook
 
               .value.trim(),
+          facebookLink: form.facebookLink.value.trim(),
 
 
 
@@ -1653,7 +1660,7 @@ export default function ShopRegisterPage() {
 
 
 
-            <div className="form-grid-3">
+            <div className="form-grid-2">
 
 
 
@@ -1687,6 +1694,19 @@ export default function ShopRegisterPage() {
 
                 />
 
+              </label>
+              <label>
+                ลิงก์ Facebook (ไม่บังคับ)
+                <input
+                  name="facebookLink"
+                  type="text"
+                  placeholder="https://www.facebook.com/ชื่อเพจ"
+                  className={fieldErrors.facebookLink ? 'input-error' : ''}
+                  onChange={() => clearFieldError('facebookLink')}
+                />
+                {fieldErrors.facebookLink && (
+                  <small className="field-error-message">* {fieldErrors.facebookLink}</small>
+                )}
               </label>
 
 

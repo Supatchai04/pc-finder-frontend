@@ -205,6 +205,19 @@ const buildFullAddress = (shop) => {
 
 
 /* =========================================================
+   SHOP CONTACT
+   The summary API may expose shopPhone on the item itself
+   or inside the shop object. Keep both response shapes supported.
+   ========================================================= */
+
+const getShopPhone = (item) => (
+  cleanText(item?.shopPhone) ||
+  cleanText(item?.shop?.shopPhone) ||
+  '-'
+);
+
+
+/* =========================================================
    SUMMARY PAGE
    ========================================================= */
 
@@ -425,14 +438,15 @@ export default function SummaryPage() {
           <p>เอกสารสรุปรายการสินค้าที่เลือกจาก PC FINDER</p>
           <table>
             <colgroup>
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '25%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '19%' }} />
-              <col style={{ width: '32%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '28%' }} />
             </colgroup>
             <thead>
-              <tr><th scope="col">หมวด</th><th scope="col">ชื่อสินค้า</th><th scope="col">ราคา</th><th scope="col">ชื่อร้านค้า</th><th scope="col">ที่อยู่ร้านค้า</th></tr>
+              <tr><th scope="col">หมวด</th><th scope="col">ชื่อสินค้า</th><th scope="col">ราคา</th><th scope="col">ชื่อร้านค้า</th><th scope="col">เบอร์โทรร้านค้า</th><th scope="col">ที่อยู่ร้านค้า</th></tr>
             </thead>
             <tbody>
               {pageRows.map((item, itemIndex) => (
@@ -441,6 +455,7 @@ export default function SummaryPage() {
                   <td>{item.displayName || item.hardwareName || '-'}</td>
                   <td>{Number(item.price || item.unitPrice || 0).toLocaleString()}.-</td>
                   <td>{item.shop?.shopName || '-'}</td>
+                  <td>{getShopPhone(item)}</td>
                   <td>{buildFullAddress(item.shop)}</td>
                 </tr>
               ))}

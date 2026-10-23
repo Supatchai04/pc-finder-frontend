@@ -74,6 +74,7 @@ import { userService } from '../../services/userService';
 import { storeService } from '../../services/storeService';
 
 import { getApiErrorMessage } from '../../utils/api';
+import FacebookContactLink, { getContactChannels } from '../../components/ui/FacebookContactLink';
 
 import { buildStorage } from '../../utils/buildStorage';
 
@@ -1447,15 +1448,7 @@ export default function FavoritesPage() {
 
   const contact =
 
-    selectedStore
-
-      ?.contactChannels ||
-
-    selectedStore
-
-      ?.contact ||
-
-    {};
+    getContactChannels(selectedStore?.contactChannels || selectedStore?.contact);
 
 
 
@@ -3259,11 +3252,7 @@ export default function FavoritesPage() {
 
                           <strong>
 
-                            {contact
-
-                              ?.facebook ||
-
-                              '-'}
+                            <FacebookContactLink name={contact?.facebook} url={contact?.facebookLink || selectedStore?.facebookLink} />
 
                           </strong>
 

@@ -57,6 +57,7 @@ import LoadingState from '../../components/ui/LoadingState';
 import { adminService } from '../../services/adminService';
 
 import { getApiErrorMessage } from '../../utils/api';
+import FacebookContactLink, { getContactChannels } from '../../components/ui/FacebookContactLink';
 
 
 
@@ -928,19 +929,7 @@ export default function AdminStoresPage() {
 
   const contact =
 
-    (
-
-      rawContact &&
-
-      typeof rawContact ===
-
-      'object'
-
-    )
-
-      ? rawContact
-
-      : {};
+    getContactChannels(rawContact);
 
 
 
@@ -948,15 +937,7 @@ export default function AdminStoresPage() {
 
   const contactText =
 
-    typeof rawContact ===
-
-      'string'
-
-      ? rawContact
-
-      : contact.channels ||
-
-      '';
+    typeof rawContact === 'string' && Object.keys(contact).length === 0 ? rawContact : contact.channels || '';
 
 
 
@@ -2568,9 +2549,7 @@ export default function AdminStoresPage() {
 
                     <dd>
 
-                      {contact.facebook ||
-
-                        '-'}
+                      <FacebookContactLink name={contact.facebook} url={contact.facebookLink || detail?.facebookLink || shop?.facebookLink} />
 
                     </dd>
 

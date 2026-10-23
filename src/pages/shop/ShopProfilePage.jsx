@@ -67,6 +67,7 @@ import { shopService } from '../../services/shopService';
 
 
 import { getApiErrorMessage } from '../../utils/api';
+import { getFacebookHref, getContactChannels } from '../../components/ui/FacebookContactLink';
 
 
 
@@ -139,6 +140,7 @@ const empty = {
 
 
   facebook: '',
+  facebookLink: '',
 
 
 
@@ -547,11 +549,7 @@ export default function ShopProfilePage() {
 
 
 
-            profile.contactChannels ||
-
-
-
-            {};
+            getContactChannels(profile.contactChannels);
 
 
 
@@ -784,6 +782,7 @@ export default function ShopProfilePage() {
 
 
               '',
+            facebookLink: contact.facebookLink || profile.facebookLink || '',
 
 
 
@@ -1687,6 +1686,11 @@ export default function ShopProfilePage() {
 
 
     }
+    if (dirty.has('facebookLink') && form.facebookLink.trim() && !getFacebookHref(form.facebookLink)) {
+      setError('กรุณาระบุลิงก์ Facebook ที่ถูกต้อง');
+      return;
+    }
+
 
 
 
@@ -2187,13 +2191,8 @@ export default function ShopProfilePage() {
 
 
           'facebook',
-
-
-
+          'facebookLink',
           'line',
-
-
-
           'website',
 
 
@@ -2247,6 +2246,7 @@ export default function ShopProfilePage() {
 
 
             form.facebook.trim(),
+          facebookLink: form.facebookLink.trim(),
 
 
 
@@ -3883,6 +3883,14 @@ export default function ShopProfilePage() {
 
 
 
+            </label>
+            <label>
+              ลิงก์ Facebook (ไม่บังคับ)
+              <input
+                {...bind('facebookLink')}
+                type="text"
+                placeholder="https://www.facebook.com/ชื่อเพจ"
+              />
             </label>
 
 

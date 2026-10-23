@@ -31,6 +31,7 @@ import { storeService } from '../../services/storeService';
 import { userService } from '../../services/userService';
 
 import { getApiErrorMessage } from '../../utils/api';
+import FacebookContactLink, { getContactChannels } from '../../components/ui/FacebookContactLink';
 
 
 /* =========================================================
@@ -600,9 +601,7 @@ export default function StoreProfilePage() {
      ========================================================= */
 
   const contact =
-    store.contactChannels ||
-    store.contact ||
-    {};
+    getContactChannels(store.contactChannels || store.contact);
 
 
   const location =
@@ -659,6 +658,7 @@ export default function StoreProfilePage() {
   const facebook =
     contact.facebook ||
     '-';
+  const facebookLink = contact.facebookLink || store.facebookLink;
 
 
   const website =
@@ -672,6 +672,7 @@ export default function StoreProfilePage() {
       contact.lineId ||
       contact.line ||
       contact.facebook ||
+      contact.facebookLink ||
       contact.website ||
       store.ownerPhone
     );
@@ -925,7 +926,7 @@ export default function StoreProfilePage() {
                     Facebook
 
                     <strong>
-                      {facebook}
+                      <FacebookContactLink name={contact.facebook} url={facebookLink} />
                     </strong>
 
                   </span>

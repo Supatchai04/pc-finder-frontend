@@ -24,6 +24,7 @@ import StoreProfilePage from './pages/public/StoreProfilePage';
 import SummaryPage from './pages/public/SummaryPage';
 
 import FavoritesPage from './pages/user/FavoritesPage';
+import UserLocationPage from './pages/user/UserLocationPage';
 
 import ShopDashboardPage from './pages/shop/ShopDashboardPage';
 import ShopProductsPage from './pages/shop/ShopProductsPage';
@@ -70,6 +71,18 @@ export default function App() {
               to="/"
               replace
             />
+          }
+        />
+
+
+        <Route
+          path="location"
+          element={
+            <ProtectedRoute>
+              <RoleRoute allow={[ROLES.USER]}>
+                <UserLocationPage />
+              </RoleRoute>
+            </ProtectedRoute>
           }
         />
 
